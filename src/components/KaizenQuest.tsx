@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, Zap, Plus, Trophy, Award, Target, Loader2 } from 'lucide-react';
 
 // Types
@@ -9,7 +9,7 @@ import type {
 
 // Constants & Utils
 import {
-  difficultyXP, ritualXP, categories, presetGoals, allBadges, titles
+  difficultyXP, ritualXP, categories, presetGoals, allBadges
 } from '../utils/constants';
 import {
   getWeekStart, getPlayerTitle, generateThemesForGoal,

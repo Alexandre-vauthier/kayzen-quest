@@ -1,4 +1,4 @@
-import type { Player, Title } from '../types/types';
+import type { Title } from '../types/types';
 import { titles } from './constants';
 
 export function getWeekStart(): string {

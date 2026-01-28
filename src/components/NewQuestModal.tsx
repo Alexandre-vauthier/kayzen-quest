@@ -1,5 +1,4 @@
 import React from 'react';
-import { X } from 'lucide-react';
 import { categories } from '../utils/constants';
 import type { CategoryType, DifficultyLevel, QuestType } from '../types/types';
 
