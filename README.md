@@ -99,11 +99,30 @@ kayzen-quest/
 
 ## 🔑 Configuration API
 
-L'application utilise l'API Claude d'Anthropic pour la génération de contenu. Pour l'utiliser en production, vous devrez :
+L'application utilise l'API Claude d'Anthropic pour la génération de contenu IA (quêtes, rituels, récits).
 
-1. Obtenir une clé API sur [Anthropic](https://console.anthropic.com/)
-2. Configurer la clé dans votre environnement
-3. Modifier les appels API dans `src/utils/utils.ts` pour inclure l'authentification
+### Configuration locale
+
+1. **Obtenir une clé API** sur [Anthropic Console](https://console.anthropic.com/)
+2. **Créer un fichier `.env`** à la racine du projet :
+   ```bash
+   cp .env.example .env
+   ```
+3. **Ajouter votre clé API** dans le fichier `.env` :
+   ```
+   ANTHROPIC_API_KEY=sk-ant-api03-...
+   ```
+
+### Configuration sur Render
+
+1. Accédez à votre service sur [Render Dashboard](https://dashboard.render.com)
+2. Allez dans **Environment** → **Environment Variables**
+3. Ajoutez la variable :
+   - **Key** : `ANTHROPIC_API_KEY`
+   - **Value** : Votre clé API Anthropic
+4. Sauvegardez et redéployez
+
+**Note** : La clé API est maintenant gérée de manière sécurisée côté serveur via le backend proxy `/api/anthropic`. Elle n'est jamais exposée côté client.
 
 ## 🛠️ Technologies utilisées
 

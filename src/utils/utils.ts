@@ -14,7 +14,7 @@ export function getPlayerTitle(level: number): Title {
 
 export async function generateThemesForGoal(goalLabel: string): Promise<any> {
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("/api/anthropic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -33,6 +33,10 @@ JSON:
     });
 
     const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
     const text = data.content[0].text.trim().replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
 
@@ -55,7 +59,7 @@ JSON:
 
 export async function generateRitualsFromAPI(goalsText: string): Promise<any[]> {
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("/api/anthropic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -74,6 +78,10 @@ JSON:
     });
 
     const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
     const text = data.content[0].text.trim().replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
 
@@ -96,7 +104,7 @@ export async function generateQuestsFromAPI(
   hasGoals: boolean
 ): Promise<any[]> {
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("/api/anthropic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -128,6 +136,10 @@ ${!hasGoals ? '1 facile, 1 moyen, 1 difficile.' : ''}`
     });
 
     const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
     const text = data.content[0].text.trim().replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
 
@@ -155,7 +167,7 @@ export async function generateLevelUpStoryFromAPI(
   previousChapters: any[]
 ): Promise<string> {
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("/api/anthropic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -181,6 +193,10 @@ Uniquement le récit.`
     });
 
     const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
     return data.content[0].text.trim();
   } catch (err) {
     console.error('Story generation failed:', err);
