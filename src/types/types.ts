@@ -1,15 +1,7 @@
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
-export type QuestType = 'daily' | 'weekly' | 'main';
+export type QuestStatus = 'available' | 'selected' | 'bonus' | 'completed';
 export type CategoryType = 'body' | 'mind' | 'environment' | 'projects' | 'social';
 export type DevelopmentLevel = 'none' | 'low' | 'medium' | 'high' | 'advanced';
-
-export interface PlayerStats {
-  body: number;
-  mind: number;
-  environment: number;
-  projects: number;
-  social: number;
-}
 
 export interface Theme {
   id: string;
@@ -38,14 +30,11 @@ export interface Player {
   level: number;
   xp: number;
   xpToNext: number;
-  stats: PlayerStats;
   badges: string[];
   questsCompleted: number;
   hardQuestsCompleted: number;
-  dailyStreak: number;
-  lastCompletionDate: string | null;
+  perfectDays: number;
   goals: Goal[];
-  rituals: Ritual[];
   storyChapters: StoryChapter[];
   onboardingComplete: boolean;
 }
@@ -55,16 +44,17 @@ export interface Quest {
   title: string;
   category: CategoryType;
   difficulty: DifficultyLevel;
-  completed: boolean;
-  type: QuestType;
+  status: QuestStatus;
+  isSelectedQuest: boolean;
   goalId: string | null;
   themeId: string | null;
+  completedAt?: string;
 }
 
-export interface Quests {
-  daily: Quest[];
-  weekly: Quest[];
-  main: Quest[];
+export interface DailyQuests {
+  quests: Quest[];
+  selectedQuestId: number | null;
+  date: string;
 }
 
 export interface QuestHistory {
@@ -72,15 +62,7 @@ export interface QuestHistory {
   date: string;
   goalId: string | null;
   themeId: string | null;
-}
-
-export interface Ritual {
-  id: number;
-  title: string;
-  category: CategoryType;
-  streak: number;
-  completedToday: boolean;
-  lastCompletedDate?: string;
+  wasPerfectDay: boolean;
 }
 
 export interface Badge {
@@ -114,9 +96,4 @@ export interface LevelUpPopupData {
   title: Title;
   titleChanged: boolean;
   story: string | null;
-}
-
-export interface LastReset {
-  daily: string;
-  weekly: string;
 }

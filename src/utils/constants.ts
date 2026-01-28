@@ -7,7 +7,8 @@ export const difficultyXP: Record<DifficultyLevel, number> = {
   hard: 50
 };
 
-export const ritualXP = 5;
+// Bonus XP multiplier pour les quêtes bonus
+export const BONUS_QUEST_MULTIPLIER = 1.5;
 
 export const categories: Record<string, Category> = {
   body: { icon: Heart, color: 'text-red-400', name: 'Corps' },
@@ -37,17 +38,43 @@ export const presetGoals: PresetGoal[] = [
   { id: 'financial', label: 'Améliorer mes finances', emoji: '💰' },
 ];
 
+// 5 badges simplifiés - focus sur la vraie progression
 export const allBadges: Badge[] = [
-  { id: 'first-quest', name: 'Premier Pas', emoji: '🔥', description: 'Première quête', condition: (p) => p.questsCompleted >= 1 },
-  { id: 'streak-7', name: 'Régularité', emoji: '📅', description: '7 jours consécutifs', condition: (p) => p.dailyStreak >= 7 },
-  { id: 'body-100', name: 'Athlète', emoji: '💪', description: '100 XP Corps', condition: (p) => p.stats.body >= 100 },
-  { id: 'mind-100', name: 'Érudit', emoji: '🧠', description: '100 XP Esprit', condition: (p) => p.stats.mind >= 100 },
-  { id: 'env-100', name: 'Organisé', emoji: '🏠', description: '100 XP Environnement', condition: (p) => p.stats.environment >= 100 },
-  { id: 'proj-100', name: 'Productif', emoji: '💼', description: '100 XP Projets', condition: (p) => p.stats.projects >= 100 },
-  { id: 'social-100', name: 'Social', emoji: '👥', description: '100 XP Social', condition: (p) => p.stats.social >= 100 },
-  { id: 'hard-10', name: 'Perfectionniste', emoji: '🌟', description: '10 quêtes difficiles', condition: (p) => p.hardQuestsCompleted >= 10 },
-  { id: 'total-50', name: 'Conquérant', emoji: '🎯', description: '50 quêtes', condition: (p) => p.questsCompleted >= 50 },
-  { id: 'level-10', name: 'Légende', emoji: '🏆', description: 'Niveau 10', condition: (p) => p.level >= 10 },
+  {
+    id: 'first-quest',
+    name: 'Premier Pas',
+    emoji: '🔥',
+    description: 'Compléter la 1ère quête',
+    condition: (p) => p.questsCompleted >= 1
+  },
+  {
+    id: 'explorer',
+    name: 'Explorateur',
+    emoji: '🌟',
+    description: 'Atteindre le niveau 5',
+    condition: (p) => p.level >= 5
+  },
+  {
+    id: 'master',
+    name: 'Maître',
+    emoji: '🏆',
+    description: 'Atteindre le niveau 10',
+    condition: (p) => p.level >= 10
+  },
+  {
+    id: 'centurion',
+    name: 'Centurion',
+    emoji: '💯',
+    description: 'Compléter 100 quêtes',
+    condition: (p) => p.questsCompleted >= 100
+  },
+  {
+    id: 'perfectionist',
+    name: 'Perfectionniste',
+    emoji: '⚡',
+    description: 'Compléter 25 quêtes difficiles',
+    condition: (p) => p.hardQuestsCompleted >= 25
+  },
 ];
 
 export const difficultyColors: Record<DifficultyLevel, string> = {

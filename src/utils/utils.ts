@@ -57,47 +57,6 @@ JSON:
   }
 }
 
-export async function generateRitualsFromAPI(goalsText: string): Promise<any[]> {
-  try {
-    const response = await fetch("/api/anthropic", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        messages: [{
-          role: "user",
-          content: `Suggère 5 rituels quotidiens (< 5min).
-
-Objectifs: ${goalsText || 'amélioration générale'}
-
-JSON:
-{"rituals": [{"title": "Action", "category": "body|mind|environment|projects|social"}]}`
-        }]
-      })
-    });
-
-    const data = await response.json();
-    if (data.error) {
-      throw new Error(data.error);
-    }
-
-    const text = data.content[0].text.trim().replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(text);
-
-    return parsed.rituals.map((r: any, i: number) => ({
-      id: Date.now() + i,
-      title: r.title,
-      category: r.category,
-      streak: 0,
-      completedToday: false
-    }));
-  } catch (err) {
-    console.error('Ritual generation failed:', err);
-    throw err;
-  }
-}
-
 export async function generateQuestsFromAPI(
   recentQuests: string,
   goalsInfo: string,
