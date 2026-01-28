@@ -1,0 +1,135 @@
+# ⚔️ Kaizen Quest
+
+Application de gamification pour le développement personnel. Transformez votre vie en une aventure RPG !
+
+## 🌟 Fonctionnalités
+
+- **Système de quêtes** : Quotidiennes, hebdomadaires et principales
+- **Progression RPG** : Gagnez des niveaux et de l'XP en complétant vos tâches
+- **5 catégories de vie** : Corps, Esprit, Environnement, Projets, Social
+- **Rituels quotidiens** : Créez des habitudes avec un système de séries
+- **Badges déblocables** : 10 badges à débloquer selon vos accomplissements
+- **Objectifs personnalisés** : Définissez vos propres objectifs avec des thèmes générés par IA
+- **Génération IA** : Utilise Claude d'Anthropic pour générer des quêtes, rituels et récits personnalisés
+- **Historique narratif** : Une histoire de votre progression générée à chaque niveau
+
+## 🚀 Installation
+
+### Prérequis
+
+- Node.js 18+
+- npm ou yarn
+
+### Installation des dépendances
+
+```bash
+npm install
+```
+
+## 💻 Développement
+
+Lancer le serveur de développement :
+
+```bash
+npm run dev
+```
+
+L'application sera accessible sur `http://localhost:5173`
+
+## 🏗️ Build
+
+Construire l'application pour la production :
+
+```bash
+npm run build
+```
+
+Les fichiers de production seront générés dans le dossier `dist/`
+
+## 🌐 Déploiement
+
+Démarrer le serveur de production :
+
+```bash
+npm run build
+npm start
+```
+
+Le serveur sera accessible sur `http://localhost:3000`
+
+## 📁 Structure du projet
+
+```
+kayzen-quest/
+├── src/
+│   ├── components/          # Composants React
+│   │   ├── KaizenQuest.tsx  # Composant principal
+│   │   ├── QuestCard.tsx    # Carte de quête
+│   │   ├── OnboardingModal.tsx
+│   │   ├── LevelUpPopup.tsx
+│   │   ├── BadgePopup.tsx
+│   │   ├── RitualsModal.tsx
+│   │   ├── BadgesModal.tsx
+│   │   ├── GoalsModal.tsx
+│   │   ├── HistoryModal.tsx
+│   │   └── NewQuestModal.tsx
+│   ├── types/               # Types TypeScript
+│   │   └── types.ts
+│   ├── utils/               # Utilitaires
+│   │   ├── constants.ts     # Constantes de l'application
+│   │   └── utils.ts         # Fonctions utilitaires
+│   ├── main.tsx            # Point d'entrée
+│   └── index.css           # Styles globaux
+├── public/                  # Assets statiques
+├── server.js               # Serveur Express
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── tailwind.config.js
+└── README.md
+```
+
+## 🎮 Utilisation
+
+1. **Onboarding** : Choisissez vos objectifs de vie
+2. **Génération de quêtes** : Cliquez sur "Générer" pour obtenir des quêtes quotidiennes personnalisées
+3. **Rituels** : Créez des habitudes quotidiennes via le bouton rituels
+4. **Complétion** : Marquez vos quêtes et rituels comme complétés pour gagner de l'XP
+5. **Progression** : Montez de niveau et débloquez des badges !
+
+## 🔑 Configuration API
+
+L'application utilise l'API Claude d'Anthropic pour la génération de contenu. Pour l'utiliser en production, vous devrez :
+
+1. Obtenir une clé API sur [Anthropic](https://console.anthropic.com/)
+2. Configurer la clé dans votre environnement
+3. Modifier les appels API dans `src/utils/utils.ts` pour inclure l'authentification
+
+## 🛠️ Technologies utilisées
+
+- **React 18** - Framework UI
+- **TypeScript** - Typage statique
+- **Vite** - Build tool
+- **Tailwind CSS** - Framework CSS
+- **Lucide React** - Icônes
+- **Express** - Serveur web
+- **Claude API** - Génération de contenu IA
+
+## 📝 Scripts disponibles
+
+- `npm run dev` - Lance le serveur de développement
+- `npm run build` - Construit l'application pour la production
+- `npm run preview` - Prévisualise le build de production
+- `npm start` - Démarre le serveur Express en production
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+
+## 📄 Licence
+
+MIT
+
+---
+
+Développé avec ❤️ et inspiré par la philosophie Kaizen 🌱
