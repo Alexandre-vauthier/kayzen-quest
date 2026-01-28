@@ -1,10 +1,11 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import type { Goal } from '../types/types';
 
 interface GoalsModalProps {
   goals: Goal[];
   newGoal: string;
+  generatingThemes: boolean;
   onClose: () => void;
   onNewGoalChange: (value: string) => void;
   onAddGoal: () => void;
@@ -14,6 +15,7 @@ interface GoalsModalProps {
 const GoalsModal: React.FC<GoalsModalProps> = ({
   goals,
   newGoal,
+  generatingThemes,
   onClose,
   onNewGoalChange,
   onAddGoal,
@@ -75,8 +77,15 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
             onKeyPress={handleKeyPress}
             className="w-full bg-white/10 rounded-lg px-4 py-3 mb-3 border border-white/20 outline-none"
           />
-          <button onClick={onAddGoal} disabled={!newGoal.trim()} className="w-full px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 disabled:opacity-50">
-            Ajouter
+          <button onClick={onAddGoal} disabled={!newGoal.trim() || generatingThemes} className="w-full px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 disabled:opacity-50 flex items-center justify-center gap-2">
+            {generatingThemes ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                Génération...
+              </>
+            ) : (
+              'Ajouter'
+            )}
           </button>
         </div>
       </div>

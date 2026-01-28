@@ -12,7 +12,7 @@ const BadgePopup: React.FC<BadgePopupProps> = ({ badge }) => {
         <div className="bg-slate-900 rounded-2xl p-6 flex items-center gap-4">
           <div className="text-5xl animate-bounce">{badge.emoji}</div>
           <div>
-            <p className="text-xs text-yellow-400 font-bold">BADGE !</p>
+            <p className="text-xs text-yellow-400 font-bold">SUCCÈS !</p>
             <h3 className="text-xl font-bold">{badge.name}</h3>
           </div>
         </div>

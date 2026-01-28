@@ -52,6 +52,7 @@ const KaizenQuest = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generatingStory, setGeneratingStory] = useState(false);
+  const [generatingThemes, setGeneratingThemes] = useState(false);
   const [levelUpPopup, setLevelUpPopup] = useState<LevelUpPopupData | null>(null);
   const [badgePopup, setBadgePopup] = useState<Badge | null>(null);
   const [perfectDayPopup, setPerfectDayPopup] = useState(false);
@@ -137,25 +138,31 @@ const KaizenQuest = () => {
     if (player.onboardingComplete) saveData();
   }, [player, dailyQuests, questHistory]);
 
-  const completeOnboarding = () => {
+  const completeOnboarding = async () => {
     const goals = [
       ...selectedPresetGoals.map(id => presetGoals.find(g => g.id === id)!.label),
       ...(newGoal ? [newGoal] : [])
     ];
 
+    setGeneratingThemes(true);
     setPlayer(prev => ({ ...prev, goals: [], onboardingComplete: true }));
     setShowOnboarding(false);
 
-    goals.forEach(goal => generateThemesForGoal(goal).then(newGoal => {
+    for (const goal of goals) {
+      const newGoal = await generateThemesForGoal(goal);
       setPlayer(prev => ({ ...prev, goals: [...(prev.goals || []), newGoal] }));
-    }));
+    }
+
+    setGeneratingThemes(false);
   };
 
   const addGoal = async () => {
     if (newGoal.trim()) {
+      setGeneratingThemes(true);
       const goal = await generateThemesForGoal(newGoal.trim());
       setPlayer(prev => ({ ...prev, goals: [...(prev.goals || []), goal] }));
       setNewGoal('');
+      setGeneratingThemes(false);
     }
   };
 
@@ -380,6 +387,7 @@ const KaizenQuest = () => {
       <OnboardingModal
         selectedPresetGoals={selectedPresetGoals}
         newGoal={newGoal}
+        generatingThemes={generatingThemes}
         onTogglePresetGoal={(goalId) => {
           if (selectedPresetGoals.includes(goalId)) {
             setSelectedPresetGoals(selectedPresetGoals.filter(id => id !== goalId));
@@ -404,22 +412,9 @@ const KaizenQuest = () => {
 
         {/* Player Card */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border-2 border-purple-500/30">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-3xl font-bold">{currentTitle.emoji} {player.name}</h2>
-              <p className="text-purple-300">Niveau {player.level}</p>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => setShowHistory(true)} className="px-4 py-2 bg-pink-500/20 hover:bg-pink-500/30 rounded-lg transition-colors">
-                <Trophy className="text-pink-400" size={24} />
-              </button>
-              <button onClick={() => setShowGoals(true)} className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg transition-colors">
-                <Target size={24} />
-              </button>
-              <button onClick={() => setShowBadges(true)} className="px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 rounded-lg transition-colors">
-                <Award className="text-yellow-400" size={24} />
-              </button>
-            </div>
+          <div className="mb-4">
+            <h2 className="text-3xl font-bold">{currentTitle.emoji} {player.name}</h2>
+            <p className="text-purple-300">Niveau {player.level}</p>
           </div>
 
           <div className="mb-4">
@@ -436,48 +431,48 @@ const KaizenQuest = () => {
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-black/20 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold">{player.questsCompleted}</p>
-              <p className="text-xs text-gray-400">Quêtes</p>
-            </div>
-            <div className="bg-black/20 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold">{player.perfectDays}</p>
-              <p className="text-xs text-gray-400">Journées parfaites</p>
-            </div>
-            <div className="bg-black/20 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold">{player.badges.length}</p>
-              <p className="text-xs text-gray-400">Badges</p>
-            </div>
+            <button onClick={() => setShowHistory(true)} className="bg-pink-500/20 hover:bg-pink-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
+              <Trophy className="text-pink-400" size={28} />
+              <p className="text-xs text-gray-300">Histoire</p>
+            </button>
+            <button onClick={() => setShowGoals(true)} className="bg-purple-500/20 hover:bg-purple-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
+              <Target className="text-purple-400" size={28} />
+              <p className="text-xs text-gray-300">Objectifs</p>
+            </button>
+            <button onClick={() => setShowBadges(true)} className="bg-yellow-500/20 hover:bg-yellow-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
+              <Award className="text-yellow-400" size={28} />
+              <p className="text-xs text-gray-300">Succès</p>
+            </button>
           </div>
         </div>
 
         {/* Daily Quests Section */}
         <div className="bg-white/5 rounded-2xl p-6 border-2 border-blue-500/30 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Quêtes du jour</h2>
-            <button
-              onClick={generateQuests}
-              disabled={generating || dailyQuests.quests.length > 0}
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {generating ? (
-                <>
-                  <Loader2 className="animate-spin" size={18} />
-                  Génération...
-                </>
-              ) : (
-                <>
-                  <Sparkles size={18} />
-                  {dailyQuests.quests.length > 0 ? 'Générer de nouvelles quêtes' : 'Générer mes quêtes'}
-                </>
-              )}
-            </button>
-          </div>
+          <h2 className="text-2xl font-bold mb-6">Quêtes du jour</h2>
 
           {dailyQuests.quests.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <p className="text-lg mb-2">Génère tes 3 quêtes quotidiennes</p>
-              <p className="text-sm">Choisis-en 1 comme ta quête du jour, les 2 autres seront des quêtes bonus (+50% XP)</p>
+              <p className="text-sm mb-6">Choisis-en 1 comme ta quête du jour, les 2 autres seront des quêtes bonus (+50% XP)</p>
+              <div className="flex justify-center">
+                <button
+                  onClick={generateQuests}
+                  disabled={generating}
+                  className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      Génération...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18} />
+                      Générer mes quêtes
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           ) : (
             <QuestSelection
@@ -514,6 +509,7 @@ const KaizenQuest = () => {
           <GoalsModal
             goals={player.goals}
             newGoal={newGoal}
+            generatingThemes={generatingThemes}
             onClose={() => setShowGoals(false)}
             onNewGoalChange={setNewGoal}
             onAddGoal={addGoal}
