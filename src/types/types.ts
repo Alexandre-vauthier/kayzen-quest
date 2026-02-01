@@ -58,6 +58,7 @@ export interface DailyQuests {
   quests: Quest[];
   selectedQuestId: number | null;
   date: string;
+  questRefreshesUsed?: number;
 }
 
 export interface QuestHistory {

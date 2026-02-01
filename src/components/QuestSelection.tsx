@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Star, ChevronDown, ChevronUp, RefreshCw, Loader2 } from 'lucide-react';
 import { categories, difficultyColors, difficultyXP, BONUS_QUEST_MULTIPLIER } from '../utils/constants';
 import type { Quest } from '../types/types';
 
@@ -8,13 +8,21 @@ interface QuestSelectionProps {
   selectedQuestId: number | null;
   onSelectQuest: (questId: number) => void;
   onCompleteQuest: (questId: number) => void;
+  isPremium?: boolean;
+  refreshesUsed?: number;
+  refreshing?: boolean;
+  onRefreshQuests?: () => void;
 }
 
 const QuestSelection: React.FC<QuestSelectionProps> = ({
   quests,
   selectedQuestId,
   onSelectQuest,
-  onCompleteQuest
+  onCompleteQuest,
+  isPremium = false,
+  refreshesUsed = 0,
+  refreshing = false,
+  onRefreshQuests
 }) => {
   const [showBonusQuests, setShowBonusQuests] = useState(true);
 
@@ -112,10 +120,26 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
         </div>
       ) : availableQuests.length > 0 ? (
         <div>
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <span className="text-purple-400">⭐</span>
-            Choisis ta quête du jour
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <span className="text-purple-400">⭐</span>
+              Choisis ta quête du jour
+            </h2>
+            {isPremium && onRefreshQuests && refreshesUsed < 2 && (
+              <button
+                onClick={onRefreshQuests}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {refreshing ? (
+                  <Loader2 className="animate-spin" size={14} />
+                ) : (
+                  <RefreshCw size={14} />
+                )}
+                Changer ({2 - refreshesUsed} restant{2 - refreshesUsed > 1 ? 's' : ''})
+              </button>
+            )}
+          </div>
           <div className="space-y-3">
             {availableQuests.map(quest => renderQuestCard(quest))}
           </div>

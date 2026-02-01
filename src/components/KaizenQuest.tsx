@@ -99,7 +99,8 @@ const KaizenQuest = () => {
         setDailyQuests({
           quests: [],
           selectedQuestId: null,
-          date: today
+          date: today,
+          questRefreshesUsed: 0
         });
       }
     };
@@ -227,6 +228,9 @@ const KaizenQuest = () => {
     setPlayer(prev => ({ ...prev, goals: (prev.goals || []).filter(g => g.id !== goalId) }));
   };
 
+  const isPremium = player.premium === true;
+  const questCount = isPremium ? 5 : 3;
+
   const generateQuests = async () => {
     setGenerating(true);
     try {
@@ -245,7 +249,7 @@ const KaizenQuest = () => {
 
       const hasGoals = player.goals && player.goals.length > 0;
 
-      const generatedQuests = await generateQuestsFromAPI(recentQuests, goalsInfo, hasGoals);
+      const generatedQuests = await generateQuestsFromAPI(recentQuests, goalsInfo, hasGoals, questCount);
 
       const newQuests: Quest[] = generatedQuests.map((q: any) => ({
         ...q,
@@ -256,8 +260,61 @@ const KaizenQuest = () => {
       setDailyQuests({
         quests: newQuests,
         selectedQuestId: null,
-        date: new Date().toDateString()
+        date: new Date().toDateString(),
+        questRefreshesUsed: 0
       });
+    } catch (err) {
+      alert('Erreur génération');
+    }
+    setGenerating(false);
+  };
+
+  const refreshQuests = async () => {
+    const refreshesUsed = dailyQuests.questRefreshesUsed || 0;
+    if (refreshesUsed >= 2) return;
+
+    setGenerating(true);
+    try {
+      const availableQuests = dailyQuests.quests.filter(q => q.status === 'available');
+      const keptQuests = dailyQuests.quests.filter(q => q.status !== 'available');
+      const countToGenerate = availableQuests.length;
+
+      if (countToGenerate === 0) {
+        setGenerating(false);
+        return;
+      }
+
+      const recentQuests = [
+        ...questHistory.slice(-15).map(q => q.title),
+        ...keptQuests.map(q => q.title)
+      ].join(', ');
+
+      const goalsInfo = (player.goals || []).map(goal => {
+        const themesInfo = goal.themes.map(t => {
+          let suggestedDifficulty = 'easy';
+          if (t.developmentLevel === 'medium') suggestedDifficulty = 'medium';
+          if (t.developmentLevel === 'high' || t.developmentLevel === 'advanced') suggestedDifficulty = 'hard';
+
+          return `${t.name} (${t.questsCompleted} quêtes, niveau: ${t.developmentLevel}, difficulté suggérée: ${suggestedDifficulty})`;
+        }).join('\n  - ');
+        return `Objectif "${goal.label}":\n  - ${themesInfo}`;
+      }).join('\n\n');
+
+      const hasGoals = player.goals && player.goals.length > 0;
+
+      const generatedQuests = await generateQuestsFromAPI(recentQuests, goalsInfo, hasGoals, countToGenerate);
+
+      const newQuests: Quest[] = generatedQuests.map((q: any) => ({
+        ...q,
+        status: 'available' as const,
+        isSelectedQuest: false
+      }));
+
+      setDailyQuests(prev => ({
+        ...prev,
+        quests: [...keptQuests, ...newQuests],
+        questRefreshesUsed: refreshesUsed + 1
+      }));
     } catch (err) {
       alert('Erreur génération');
     }
@@ -362,9 +419,10 @@ const KaizenQuest = () => {
     );
 
     const completedCount = updatedQuests.filter(q => q.status === 'completed').length;
-    const wasPerfectDay = completedCount === 3;
+    const totalQuests = updatedQuests.length;
+    const wasPerfectDay = completedCount === totalQuests;
 
-    if (wasPerfectDay && completedCount === 3) {
+    if (wasPerfectDay) {
       newPlayerData.perfectDays++;
       setPerfectDayPopup(true);
       setTimeout(() => setPerfectDayPopup(false), 5000);
@@ -538,8 +596,8 @@ const KaizenQuest = () => {
 
           {dailyQuests.quests.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
-              <p className="text-lg mb-2">Génère tes 3 quêtes quotidiennes</p>
-              <p className="text-sm mb-6">Choisis-en 1 comme ta quête du jour, les 2 autres seront des quêtes bonus (+50% XP)</p>
+              <p className="text-lg mb-2">Génère tes {questCount} quêtes quotidiennes</p>
+              <p className="text-sm mb-6">Choisis-en 1 comme ta quête du jour, les {questCount - 1} autres seront des quêtes bonus (+50% XP)</p>
               <div className="flex justify-center">
                 <button
                   onClick={generateQuests}
@@ -566,6 +624,10 @@ const KaizenQuest = () => {
               selectedQuestId={dailyQuests.selectedQuestId}
               onSelectQuest={selectQuest}
               onCompleteQuest={completeQuest}
+              isPremium={isPremium}
+              refreshesUsed={dailyQuests.questRefreshesUsed || 0}
+              refreshing={generating}
+              onRefreshQuests={refreshQuests}
             />
           )}
         </div>
@@ -582,7 +644,7 @@ const KaizenQuest = () => {
                 <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">
                   JOURNÉE PARFAITE !
                 </h2>
-                <p className="text-xl text-purple-300">Tu as complété les 3 quêtes aujourd'hui !</p>
+                <p className="text-xl text-purple-300">Tu as complété toutes les quêtes aujourd'hui !</p>
               </div>
             </div>
           </div>
@@ -605,7 +667,7 @@ const KaizenQuest = () => {
         {showSettings && (
           <SettingsModal
             onClose={() => setShowSettings(false)}
-            isPremium={player.premium === true}
+            isPremium={isPremium}
             onTogglePremium={() => setPlayer(prev => ({ ...prev, premium: !prev.premium }))}
           />
         )}

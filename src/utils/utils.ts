@@ -60,18 +60,25 @@ JSON:
 export async function generateQuestsFromAPI(
   recentQuests: string,
   goalsInfo: string,
-  hasGoals: boolean
+  hasGoals: boolean,
+  questCount: number = 3
 ): Promise<any[]> {
   try {
+    const difficultyInstruction = !hasGoals
+      ? questCount <= 3
+        ? '1 facile, 1 moyen, 1 difficile.'
+        : '2 faciles, 2 moyens, 1 difficile.'
+      : '';
+
     const response = await fetch("/api/anthropic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
+        max_tokens: 1500,
         messages: [{
           role: "user",
-          content: `Génère 3 quêtes quotidiennes. JSON uniquement.
+          content: `Génère ${questCount} quêtes quotidiennes. JSON uniquement.
 
 ${hasGoals ? `${goalsInfo}
 
@@ -82,14 +89,14 @@ RÈGLE CRUCIALE - Difficulté adaptée au niveau:
 
 La difficulté doit correspondre au niveau de développement du thème !
 
-Priorité aux thèmes peu développés. Varie les thèmes.` : 'Amélioration générale, 1 facile, 1 moyen, 1 difficile'}
+Priorité aux thèmes peu développés. Varie les thèmes.` : `Amélioration générale, ${difficultyInstruction}`}
 
 Éviter: ${recentQuests || 'aucune'}
 
 Format:
 {"quests": [{"title": "Action", "category": "body|mind|environment|projects|social", "difficulty": "easy|medium|hard"${hasGoals ? ', "goalId": "goal-XXX", "themeId": "theme-id"' : ''}}, ...]}
 
-${!hasGoals ? '1 facile, 1 moyen, 1 difficile.' : ''}`
+${difficultyInstruction}`
         }]
       })
     });
