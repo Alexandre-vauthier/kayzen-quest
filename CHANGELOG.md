@@ -6,6 +6,33 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ---
 
+## [1.3.0] - 2026-02-01
+
+### Correctifs, améliorations UX et nouvelles fonctionnalités
+
+#### Fixed
+- **Affichage XP bonus corrigé** - Les 3 quêtes au chargement (statut `available`) affichaient toutes le XP bonus (+50%). Désormais seules les quêtes de statut `bonus` montrent le XP majoré.
+- **Labels niveaux dans Objectifs** - Remplacement de "none(0)" par des labels français : Nouveau, Débutant, Intermédiaire, Avancé, Expert.
+
+#### Changed
+- **Progression XP facilitée** - Multiplicateur XP pour le niveau suivant réduit de x1.5 à x1.2 pour une montée de niveau plus accessible.
+
+#### Added
+- **Timer prochaine génération** - Compteur à rebours affiché à côté de "Quêtes du jour" indiquant le temps restant avant la réinitialisation quotidienne (minuit).
+- **Quêtes bonus complétées visibles** - Les quêtes bonus terminées restent affichées dans la section bonus (grisées) au lieu de disparaître. Nouveau champ `wasBonus` sur l'interface Quest.
+- **Message IA de complétion** - À chaque validation de quête, un message généré par IA s'affiche en toast (6s) décrivant le bénéfice concret de l'action accomplie.
+- **Page Paramètres** - Icône engrenage discrète en haut à droite du titre. Modal avec 4 liens : Mon compte, Notifications, CGU, Support (pages vides pour le moment).
+- **Nouveau composant SettingsModal** (`src/components/SettingsModal.tsx`)
+- **Nouvelle fonction API** `generateQuestCompletionMessage` dans `utils.ts`
+
+### De v1.2.0 vers v1.3.0
+
+**Pas de breaking changes**
+- Nouveau champ optionnel `wasBonus` sur Quest (rétrocompatible)
+- Nouvelles fonctionnalités UI uniquement
+
+---
+
 ## [1.2.0] - 2026-01-28
 
 ### Améliorations UX majeures

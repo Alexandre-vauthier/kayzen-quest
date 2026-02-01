@@ -49,6 +49,7 @@ export interface Quest {
   goalId: string | null;
   themeId: string | null;
   completedAt?: string;
+  wasBonus?: boolean;
 }
 
 export interface DailyQuests {

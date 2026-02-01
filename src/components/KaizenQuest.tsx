@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, Trophy, Award, Target, Loader2 } from 'lucide-react';
+import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings } from 'lucide-react';
 
 // Types
 import type {
@@ -12,7 +12,7 @@ import {
 } from '../utils/constants';
 import {
   getPlayerTitle, generateThemesForGoal,
-  generateQuestsFromAPI, generateLevelUpStoryFromAPI
+  generateQuestsFromAPI, generateLevelUpStoryFromAPI, generateQuestCompletionMessage
 } from '../utils/utils';
 
 // Components
@@ -23,6 +23,7 @@ import BadgePopup from './BadgePopup';
 import BadgesModal from './BadgesModal';
 import GoalsModal from './GoalsModal';
 import HistoryModal from './HistoryModal';
+import SettingsModal from './SettingsModal';
 
 const KaizenQuest = () => {
   const [player, setPlayer] = useState<Player>({
@@ -59,6 +60,9 @@ const KaizenQuest = () => {
 
   const [newGoal, setNewGoal] = useState('');
   const [selectedPresetGoals, setSelectedPresetGoals] = useState<string[]>([]);
+  const [timeToReset, setTimeToReset] = useState('');
+  const [completionMessage, setCompletionMessage] = useState<{ text: string; questTitle: string } | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const checkBadges = (newPlayerData: Player) => {
     if (!newPlayerData.badges) newPlayerData.badges = [];
@@ -93,6 +97,24 @@ const KaizenQuest = () => {
     const interval = setInterval(checkDailyReset, 60000);
     return () => clearInterval(interval);
   }, [dailyQuests.date]);
+
+  // Timer countdown jusqu'à minuit
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - now.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeToReset(`${hours.toString().padStart(2, '0')}h${minutes.toString().padStart(2, '0')}m${seconds.toString().padStart(2, '0')}s`);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -280,7 +302,7 @@ const KaizenQuest = () => {
     if (newXp >= player.xpToNext) {
       newLevel++;
       finalXp = newXp - player.xpToNext;
-      newXpToNext = Math.floor(player.xpToNext * 1.5);
+      newXpToNext = Math.floor(player.xpToNext * 1.2);
       leveledUp = true;
     }
 
@@ -301,7 +323,7 @@ const KaizenQuest = () => {
 
     // Mise à jour des quêtes
     const updatedQuests = dailyQuests.quests.map(q =>
-      q.id === questId ? { ...q, status: 'completed' as const, completedAt: new Date().toISOString() } : q
+      q.id === questId ? { ...q, status: 'completed' as const, completedAt: new Date().toISOString(), wasBonus: isBonus } : q
     );
 
     const completedCount = updatedQuests.filter(q => q.status === 'completed').length;
@@ -327,6 +349,14 @@ const KaizenQuest = () => {
     }]);
 
     checkBadges(newPlayerData);
+
+    // Générer un message IA de félicitation (async, non bloquant)
+    generateQuestCompletionMessage(quest.title).then(msg => {
+      if (msg) {
+        setCompletionMessage({ text: msg, questTitle: quest.title });
+        setTimeout(() => setCompletionMessage(null), 6000);
+      }
+    });
 
     if (leveledUp) {
       generateLevelUpStory(newPlayerData, newLevel, currentTitle, previousTitle);
@@ -404,10 +434,17 @@ const KaizenQuest = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="relative text-center mb-8">
           <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
             ⚔️ Kaizen Quest ⚔️
           </h1>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-300 transition-colors"
+            title="Paramètres"
+          >
+            <Settings size={20} />
+          </button>
         </div>
 
         {/* Player Card */}
@@ -448,7 +485,15 @@ const KaizenQuest = () => {
 
         {/* Daily Quests Section */}
         <div className="bg-white/5 rounded-2xl p-6 border-2 border-blue-500/30 mb-6">
-          <h2 className="text-2xl font-bold mb-6">Quêtes du jour</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Quêtes du jour</h2>
+            {dailyQuests.quests.length > 0 && (
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <Clock size={14} />
+                <span>Prochaines quêtes dans {timeToReset}</span>
+              </div>
+            )}
+          </div>
 
           {dailyQuests.quests.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
@@ -485,6 +530,13 @@ const KaizenQuest = () => {
         </div>
 
         {/* Popups */}
+        {completionMessage && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+            <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/40 backdrop-blur-lg rounded-xl p-4 text-center shadow-lg">
+              <p className="text-green-300 text-sm font-medium">{completionMessage.text}</p>
+            </div>
+          </div>
+        )}
         {levelUpPopup && <LevelUpPopup data={levelUpPopup} generatingStory={generatingStory} />}
         {badgePopup && <BadgePopup badge={badgePopup} />}
 
@@ -516,6 +568,7 @@ const KaizenQuest = () => {
             onRemoveGoal={removeGoal}
           />
         )}
+        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       </div>
     </div>
   );

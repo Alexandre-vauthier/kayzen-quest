@@ -118,6 +118,32 @@ ${!hasGoals ? '1 facile, 1 moyen, 1 difficile.' : ''}`
   }
 }
 
+export async function generateQuestCompletionMessage(questTitle: string): Promise<string> {
+  try {
+    const response = await fetch("/api/anthropic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 100,
+        messages: [{
+          role: "user",
+          content: `Quête accomplie : "${questTitle}"
+
+Génère UNE seule phrase courte et motivante sur le bénéfice concret de cette action pour le développement personnel. Ton bienveillant et zen. Pas de guillemets. Uniquement la phrase.`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+    return data.content[0].text.trim();
+  } catch (err) {
+    console.error('Completion message failed:', err);
+    return '';
+  }
+}
+
 export async function generateLevelUpStoryFromAPI(
   newLevel: number,
   currentTitle: Title,

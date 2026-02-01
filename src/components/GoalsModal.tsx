@@ -12,6 +12,14 @@ interface GoalsModalProps {
   onRemoveGoal: (goalId: string) => void;
 }
 
+const developmentLevelLabels: Record<string, string> = {
+  none: 'Nouveau',
+  low: 'Débutant',
+  medium: 'Intermédiaire',
+  high: 'Avancé',
+  advanced: 'Expert'
+};
+
 const GoalsModal: React.FC<GoalsModalProps> = ({
   goals,
   newGoal,
@@ -59,7 +67,7 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
                             theme.developmentLevel === 'high' ? 'bg-pink-500/20' :
                             'bg-yellow-500/20'
                           }`}>
-                            {theme.developmentLevel} ({theme.questsCompleted})
+                            {developmentLevelLabels[theme.developmentLevel] || theme.developmentLevel} ({theme.questsCompleted})
                           </span>
                         </div>
                       ))}

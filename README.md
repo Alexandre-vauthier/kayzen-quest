@@ -4,14 +4,16 @@ Application de gamification pour le développement personnel. Transformez votre 
 
 ## 🌟 Fonctionnalités
 
-- **Système de quêtes** : Quotidiennes, hebdomadaires et principales
-- **Progression RPG** : Gagnez des niveaux et de l'XP en complétant vos tâches
+- **Système de quêtes quotidiennes** : 3 quêtes générées par jour, choisissez votre quête principale, les 2 autres deviennent des bonus (+50% XP)
+- **Progression RPG** : Gagnez des niveaux et de l'XP en complétant vos quêtes
 - **5 catégories de vie** : Corps, Esprit, Environnement, Projets, Social
-- **Rituels quotidiens** : Créez des habitudes avec un système de séries
-- **Badges déblocables** : 10 badges à débloquer selon vos accomplissements
+- **Journée parfaite** : Complétez les 3 quêtes du jour pour un bonus spécial
+- **5 badges déblocables** : Badges à débloquer selon vos accomplissements
 - **Objectifs personnalisés** : Définissez vos propres objectifs avec des thèmes générés par IA
-- **Génération IA** : Utilise Claude d'Anthropic pour générer des quêtes, rituels et récits personnalisés
-- **Historique narratif** : Une histoire de votre progression générée à chaque niveau
+- **Génération IA** : Utilise Claude d'Anthropic pour générer des quêtes et récits personnalisés
+- **Message IA de complétion** : Feedback motivant généré par IA à chaque quête validée
+- **Historique narratif** : Une histoire de votre progression générée à chaque level up
+- **Paramètres** : Page de paramètres avec accès au compte, notifications, CGU et support
 
 ## 🚀 Installation
 
@@ -64,15 +66,14 @@ kayzen-quest/
 ├── src/
 │   ├── components/          # Composants React
 │   │   ├── KaizenQuest.tsx  # Composant principal
-│   │   ├── QuestCard.tsx    # Carte de quête
+│   │   ├── QuestSelection.tsx # Sélection et affichage des quêtes
 │   │   ├── OnboardingModal.tsx
 │   │   ├── LevelUpPopup.tsx
 │   │   ├── BadgePopup.tsx
-│   │   ├── RitualsModal.tsx
 │   │   ├── BadgesModal.tsx
 │   │   ├── GoalsModal.tsx
 │   │   ├── HistoryModal.tsx
-│   │   └── NewQuestModal.tsx
+│   │   └── SettingsModal.tsx
 │   ├── types/               # Types TypeScript
 │   │   └── types.ts
 │   ├── utils/               # Utilitaires
@@ -92,9 +93,9 @@ kayzen-quest/
 ## 🎮 Utilisation
 
 1. **Onboarding** : Choisissez vos objectifs de vie
-2. **Génération de quêtes** : Cliquez sur "Générer" pour obtenir des quêtes quotidiennes personnalisées
-3. **Rituels** : Créez des habitudes quotidiennes via le bouton rituels
-4. **Complétion** : Marquez vos quêtes et rituels comme complétés pour gagner de l'XP
+2. **Génération de quêtes** : Cliquez sur "Générer" pour obtenir 3 quêtes quotidiennes personnalisées
+3. **Sélection** : Choisissez votre quête du jour, les 2 autres deviennent des bonus (+50% XP)
+4. **Complétion** : Validez vos quêtes pour gagner de l'XP et recevoir un message de motivation IA
 5. **Progression** : Montez de niveau et débloquez des badges !
 
 ## 🔑 Configuration API
