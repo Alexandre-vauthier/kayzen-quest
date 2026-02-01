@@ -89,12 +89,13 @@ RÈGLE CRUCIALE - Difficulté adaptée au niveau:
 
 La difficulté doit correspondre au niveau de développement du thème !
 
-Priorité aux thèmes peu développés. Varie les thèmes.` : `Amélioration générale, ${difficultyInstruction}`}
+Priorité aux thèmes peu développés. Varie les thèmes.
+IMPORTANT: Utilise les goalId et themeId EXACTS fournis entre crochets ci-dessus.` : `Amélioration générale, ${difficultyInstruction}`}
 
 Éviter: ${recentQuests || 'aucune'}
 
 Format:
-{"quests": [{"title": "Action", "category": "body|mind|environment|projects|social", "difficulty": "easy|medium|hard"${hasGoals ? ', "goalId": "goal-XXX", "themeId": "theme-id"' : ''}}, ...]}
+{"quests": [{"title": "Action", "category": "body|mind|environment|projects|social", "difficulty": "easy|medium|hard"${hasGoals ? ', "goalId": "goalId-exact", "themeId": "themeId-exact"' : ''}}, ...]}
 
 ${difficultyInstruction}`
         }]

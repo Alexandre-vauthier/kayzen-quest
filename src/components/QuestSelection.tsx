@@ -55,7 +55,8 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
 
   const renderQuestCard = (quest: Quest, isMain: boolean = false) => {
     const CategoryIcon = categories[quest.category].icon;
-    const xp = quest.status === 'bonus' ? Math.floor(difficultyXP[quest.difficulty] * BONUS_QUEST_MULTIPLIER) : difficultyXP[quest.difficulty];
+    const isOrWasBonus = quest.status === 'bonus' || (quest.status === 'completed' && quest.wasBonus);
+    const xp = isOrWasBonus ? Math.floor(difficultyXP[quest.difficulty] * BONUS_QUEST_MULTIPLIER) : difficultyXP[quest.difficulty];
     const isCompleted = quest.status === 'completed';
 
     return (
@@ -76,7 +77,7 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
           <span className="px-3 py-1 rounded-full bg-white/10 font-bold">
             +{xp} XP
           </span>
-          {quest.status === 'bonus' && !isCompleted && (
+          {isOrWasBonus && (
             <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 font-bold flex items-center gap-1">
               <Star size={14} />
               Bonus +50%

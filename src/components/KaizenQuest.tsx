@@ -242,9 +242,9 @@ const KaizenQuest = () => {
           if (t.developmentLevel === 'medium') suggestedDifficulty = 'medium';
           if (t.developmentLevel === 'high' || t.developmentLevel === 'advanced') suggestedDifficulty = 'hard';
 
-          return `${t.name} (${t.questsCompleted} quêtes, niveau: ${t.developmentLevel}, difficulté suggérée: ${suggestedDifficulty})`;
+          return `${t.name} [goalId="${goal.id}", themeId="${t.id}"] (${t.questsCompleted} quêtes, niveau: ${t.developmentLevel}, difficulté suggérée: ${suggestedDifficulty})`;
         }).join('\n  - ');
-        return `Objectif "${goal.label}":\n  - ${themesInfo}`;
+        return `Objectif "${goal.label}" [goalId="${goal.id}"]:\n  - ${themesInfo}`;
       }).join('\n\n');
 
       const hasGoals = player.goals && player.goals.length > 0;
@@ -295,9 +295,9 @@ const KaizenQuest = () => {
           if (t.developmentLevel === 'medium') suggestedDifficulty = 'medium';
           if (t.developmentLevel === 'high' || t.developmentLevel === 'advanced') suggestedDifficulty = 'hard';
 
-          return `${t.name} (${t.questsCompleted} quêtes, niveau: ${t.developmentLevel}, difficulté suggérée: ${suggestedDifficulty})`;
+          return `${t.name} [goalId="${goal.id}", themeId="${t.id}"] (${t.questsCompleted} quêtes, niveau: ${t.developmentLevel}, difficulté suggérée: ${suggestedDifficulty})`;
         }).join('\n  - ');
-        return `Objectif "${goal.label}":\n  - ${themesInfo}`;
+        return `Objectif "${goal.label}" [goalId="${goal.id}"]:\n  - ${themesInfo}`;
       }).join('\n\n');
 
       const hasGoals = player.goals && player.goals.length > 0;
@@ -597,7 +597,7 @@ const KaizenQuest = () => {
         <div className="bg-white/5 rounded-2xl p-6 border-2 border-blue-500/30 mb-6">
           <div className="mb-6">
             <h2 className="text-2xl font-bold">Quêtes du jour</h2>
-            {dailyQuests.quests.length > 0 && (
+            {dailyQuests.quests.length > 0 && dailyQuests.quests.every(q => q.status === 'completed') && (
               <div className="flex items-center gap-2 text-sm text-gray-400 mt-2">
                 <Clock size={14} />
                 <span>Prochaines quêtes dans {timeToReset}</span>

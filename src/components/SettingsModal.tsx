@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ChevronRight, User, Bell, FileText, HelpCircle, ArrowLeft } from 'lucide-react';
 import AccountPage from './AccountPage';
+import CGUPage from './CGUPage';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -46,6 +47,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, isPremium, onTog
 
     if (page === 'account') {
       return <AccountPage isPremium={isPremium} onTogglePremium={onTogglePremium} />;
+    }
+
+    if (page === 'cgu') {
+      return <CGUPage />;
     }
 
     return (
