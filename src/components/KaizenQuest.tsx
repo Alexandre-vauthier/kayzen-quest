@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings } from 'lucide-react';
 
 // Types
@@ -15,6 +15,14 @@ import {
   generateQuestsFromAPI, generateLevelUpStoryFromAPI, generateQuestCompletionMessage
 } from '../utils/utils';
 
+// Auth & Firestore
+import { useAuth } from '../contexts/AuthContext';
+import {
+  loadPlayer, loadDailyQuests, loadHistory,
+  savePlayer, saveDailyQuests, saveHistory,
+  saveUserProfile, migrateLocalStorageToFirestore
+} from '../services/firestoreService';
+
 // Components
 import QuestSelection from './QuestSelection';
 import OnboardingModal from './OnboardingModal';
@@ -26,6 +34,10 @@ import HistoryModal from './HistoryModal';
 import SettingsModal from './SettingsModal';
 
 const KaizenQuest = () => {
+  const { user } = useAuth();
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dataLoadedRef = useRef(false);
+
   const [player, setPlayer] = useState<Player>({
     name: "Aventurier",
     level: 1,
@@ -116,48 +128,73 @@ const KaizenQuest = () => {
   }, []);
 
   useEffect(() => {
+    if (!user) return;
     const loadData = async () => {
       try {
-        const playerData = await (window as any).storage.get('kaizen-player');
-        const questsData = await (window as any).storage.get('kaizen-daily-quests');
-        const historyData = await (window as any).storage.get('kaizen-history');
+        // Migrate localStorage data on first login
+        await migrateLocalStorageToFirestore(user.uid);
+
+        // Save/update user profile
+        await saveUserProfile(user.uid, {
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          lastLoginAt: new Date().toISOString(),
+        });
+
+        // Load from Firestore
+        const playerData = await loadPlayer(user.uid);
+        const questsData = await loadDailyQuests(user.uid);
+        const historyData = await loadHistory(user.uid);
 
         if (playerData) {
-          const loadedPlayer = JSON.parse(playerData.value);
-          setPlayer(loadedPlayer);
-          if (!loadedPlayer.onboardingComplete) setShowOnboarding(true);
+          setPlayer(playerData);
+          if (!playerData.onboardingComplete) setShowOnboarding(true);
         } else {
           setShowOnboarding(true);
         }
 
-        if (questsData) {
-          const loaded = JSON.parse(questsData.value);
-          // Vérifier si c'est encore aujourd'hui
-          if (loaded.date === new Date().toDateString()) {
-            setDailyQuests(loaded);
-          }
+        if (questsData && questsData.date === new Date().toDateString()) {
+          setDailyQuests(questsData);
         }
-        if (historyData) setQuestHistory(JSON.parse(historyData.value));
+
+        if (historyData && historyData.length > 0) {
+          setQuestHistory(historyData);
+        }
+
+        dataLoadedRef.current = true;
       } catch (err) {
+        console.error('Load from Firestore failed:', err);
         setShowOnboarding(true);
+        dataLoadedRef.current = true;
       }
     };
     loadData();
-  }, []);
+  }, [user]);
 
-  const saveData = async () => {
+  const saveData = useCallback(async () => {
+    if (!user) return;
     try {
-      await (window as any).storage.set('kaizen-player', JSON.stringify(player));
-      await (window as any).storage.set('kaizen-daily-quests', JSON.stringify(dailyQuests));
-      await (window as any).storage.set('kaizen-history', JSON.stringify(questHistory));
+      await Promise.all([
+        savePlayer(user.uid, player),
+        saveDailyQuests(user.uid, dailyQuests),
+        saveHistory(user.uid, questHistory),
+      ]);
     } catch (err) {
-      console.error('Save failed:', err);
+      console.error('Save to Firestore failed:', err);
     }
-  };
+  }, [user, player, dailyQuests, questHistory]);
 
   useEffect(() => {
-    if (player.onboardingComplete) saveData();
-  }, [player, dailyQuests, questHistory]);
+    if (!player.onboardingComplete || !dataLoadedRef.current) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveData();
+    }, 1000);
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [player, dailyQuests, questHistory, saveData]);
 
   const completeOnboarding = async () => {
     const goals = [

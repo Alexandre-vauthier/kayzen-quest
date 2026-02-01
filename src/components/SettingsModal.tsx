@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, ChevronRight, User, Bell, FileText, HelpCircle, ArrowLeft } from 'lucide-react';
+import AccountPage from './AccountPage';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -39,6 +40,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           })}
         </div>
       );
+    }
+
+    if (page === 'account') {
+      return <AccountPage />;
     }
 
     return (

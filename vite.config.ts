@@ -46,6 +46,22 @@ export default defineConfig({
           {
             urlPattern: /^https:\/\/api\.anthropic\.com\/.*/i,
             handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /^https:\/\/.*\.googleapis\.com\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'firebase-auth',
+              expiration: { maxEntries: 10, maxAgeSeconds: 3600 }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/.*\.firebaseio\.com\/.*/i,
+            handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
+            handler: 'NetworkOnly'
           }
         ]
       }
