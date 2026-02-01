@@ -6,8 +6,10 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   signOut as firebaseSignOut,
+  deleteUser,
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { deleteUserData } from '../services/firestoreService';
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +17,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,8 +56,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await firebaseSignOut(auth);
   };
 
+  const deleteAccount = async () => {
+    if (!user) return;
+    await deleteUserData(user.uid);
+    await deleteUser(user);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithApple, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithApple, signOut, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

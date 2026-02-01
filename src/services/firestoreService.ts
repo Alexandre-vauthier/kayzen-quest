@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Player, DailyQuests, QuestHistory } from '../types/types';
 
@@ -42,6 +42,17 @@ export async function saveUserProfile(uid: string, profile: {
   lastLoginAt: string;
 }): Promise<void> {
   await setDoc(doc(db, 'users', uid), profile, { merge: true });
+}
+
+// --- Delete all user data ---
+
+export async function deleteUserData(uid: string): Promise<void> {
+  await Promise.all([
+    deleteDoc(doc(db, 'users', uid, 'data', 'player')),
+    deleteDoc(doc(db, 'users', uid, 'data', 'dailyQuests')),
+    deleteDoc(doc(db, 'users', uid, 'data', 'history')),
+  ]);
+  await deleteDoc(doc(db, 'users', uid));
 }
 
 // --- Migration localStorage → Firestore ---
