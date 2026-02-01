@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { LogOut, Trash2, AlertTriangle } from 'lucide-react';
+import { LogOut, Trash2, AlertTriangle, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const AccountPage: React.FC = () => {
+const ADMIN_EMAIL = 'alex.vauthier@gmail.com';
+
+interface AccountPageProps {
+  isPremium: boolean;
+  onTogglePremium: () => void;
+}
+
+const AccountPage: React.FC<AccountPageProps> = ({ isPremium, onTogglePremium }) => {
   const { user, signOut, deleteAccount } = useAuth();
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -11,6 +18,7 @@ const AccountPage: React.FC = () => {
   if (!user) return null;
 
   const provider = user.providerData[0]?.providerId === 'apple.com' ? 'Apple' : 'Google';
+  const isAdmin = user.email === ADMIN_EMAIL;
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -40,7 +48,10 @@ const AccountPage: React.FC = () => {
           />
         )}
         <div>
-          <p className="font-bold text-lg">{user.displayName || 'Aventurier'}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-lg">{user.displayName || 'Aventurier'}</p>
+            {isPremium && <Crown size={16} className="text-yellow-400" />}
+          </div>
           <p className="text-gray-400 text-sm">{user.email}</p>
         </div>
       </div>
@@ -49,6 +60,28 @@ const AccountPage: React.FC = () => {
         <p className="text-sm text-gray-400 mb-1">Connexion via</p>
         <p className="text-sm">{provider}</p>
       </div>
+
+      <div className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-400 mb-1">Abonnement</p>
+          <p className="text-sm font-semibold">{isPremium ? 'Premium' : 'Gratuit'}</p>
+        </div>
+        {isPremium && <Crown size={20} className="text-yellow-400" />}
+      </div>
+
+      {isAdmin && (
+        <button
+          onClick={onTogglePremium}
+          className={`w-full py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-colors ${
+            isPremium
+              ? 'bg-gray-500/20 hover:bg-gray-500/30 text-gray-300'
+              : 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400'
+          }`}
+        >
+          <Crown size={16} />
+          {isPremium ? 'Passer en Freemium' : 'Passer en Premium'}
+        </button>
+      )}
 
       <button
         onClick={signOut}

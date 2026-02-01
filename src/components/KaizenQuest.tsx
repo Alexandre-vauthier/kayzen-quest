@@ -602,7 +602,13 @@ const KaizenQuest = () => {
             onRemoveGoal={removeGoal}
           />
         )}
-        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+        {showSettings && (
+          <SettingsModal
+            onClose={() => setShowSettings(false)}
+            isPremium={player.premium === true}
+            onTogglePremium={() => setPlayer(prev => ({ ...prev, premium: !prev.premium }))}
+          />
+        )}
       </div>
     </div>
   );

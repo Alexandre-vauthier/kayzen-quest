@@ -37,6 +37,7 @@ export interface Player {
   goals: Goal[];
   storyChapters: StoryChapter[];
   onboardingComplete: boolean;
+  premium?: boolean;
 }
 
 export interface Quest {

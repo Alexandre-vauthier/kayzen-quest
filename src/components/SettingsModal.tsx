@@ -4,6 +4,8 @@ import AccountPage from './AccountPage';
 
 interface SettingsModalProps {
   onClose: () => void;
+  isPremium: boolean;
+  onTogglePremium: () => void;
 }
 
 type SettingsPage = 'menu' | 'account' | 'notifications' | 'cgu' | 'support';
@@ -15,7 +17,7 @@ const settingsItems: { id: SettingsPage; label: string; icon: React.FC<any> }[] 
   { id: 'support', label: 'Support', icon: HelpCircle },
 ];
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, isPremium, onTogglePremium }) => {
   const [page, setPage] = useState<SettingsPage>('menu');
 
   const renderPage = () => {
@@ -43,7 +45,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
     }
 
     if (page === 'account') {
-      return <AccountPage />;
+      return <AccountPage isPremium={isPremium} onTogglePremium={onTogglePremium} />;
     }
 
     return (
