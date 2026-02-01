@@ -28,14 +28,12 @@ export const titles: Title[] = [
 ];
 
 export const presetGoals: PresetGoal[] = [
-  { id: 'fitness', label: 'Être en meilleure forme physique', emoji: '💪' },
-  { id: 'creative', label: 'Être plus créatif', emoji: '🎨' },
-  { id: 'organized', label: 'Être plus organisé', emoji: '📋' },
-  { id: 'learning', label: 'Apprendre et me cultiver', emoji: '📚' },
-  { id: 'social', label: 'Développer ma vie sociale', emoji: '👥' },
-  { id: 'career', label: 'Faire avancer ma carrière', emoji: '💼' },
-  { id: 'wellness', label: 'Prendre soin de mon bien-être mental', emoji: '🧘' },
-  { id: 'financial', label: 'Améliorer mes finances', emoji: '💰' },
+  { id: 'fitness', label: 'Bouger plus au quotidien', emoji: '💪' },
+  { id: 'creative', label: 'Pratiquer une activité créative', emoji: '🎨' },
+  { id: 'organized', label: 'Mieux structurer mes journées', emoji: '📋' },
+  { id: 'learning', label: 'Apprendre quelque chose chaque jour', emoji: '📚' },
+  { id: 'wellness', label: 'Prendre du temps pour moi', emoji: '🧘' },
+  { id: 'financial', label: 'Mieux gérer mon argent', emoji: '💰' },
 ];
 
 // 5 badges simplifiés - focus sur la vraie progression
