@@ -275,9 +275,9 @@ const KaizenQuest = () => {
 
     setGenerating(true);
     try {
-      const availableQuests = dailyQuests.quests.filter(q => q.status === 'available');
-      const keptQuests = dailyQuests.quests.filter(q => q.status !== 'available');
-      const countToGenerate = availableQuests.length;
+      const refreshableQuests = dailyQuests.quests.filter(q => q.status === 'available' || q.status === 'bonus');
+      const keptQuests = dailyQuests.quests.filter(q => q.status !== 'available' && q.status !== 'bonus');
+      const countToGenerate = refreshableQuests.length;
 
       if (countToGenerate === 0) {
         setGenerating(false);
@@ -304,9 +304,10 @@ const KaizenQuest = () => {
 
       const generatedQuests = await generateQuestsFromAPI(recentQuests, goalsInfo, hasGoals, countToGenerate);
 
+      const hasSelectedQuest = keptQuests.some(q => q.status === 'selected');
       const newQuests: Quest[] = generatedQuests.map((q: any) => ({
         ...q,
-        status: 'available' as const,
+        status: hasSelectedQuest ? 'bonus' as const : 'available' as const,
         isSelectedQuest: false
       }));
 
@@ -658,6 +659,7 @@ const KaizenQuest = () => {
             goals={player.goals}
             newGoal={newGoal}
             generatingThemes={generatingThemes}
+            isPremium={isPremium}
             onClose={() => setShowGoals(false)}
             onNewGoalChange={setNewGoal}
             onAddGoal={addGoal}

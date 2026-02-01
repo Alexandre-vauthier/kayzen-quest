@@ -35,6 +35,23 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
   const selectedQuest = quests.find(q => q.id === selectedQuestId);
   const availableQuests = quests.filter(q => q.status === 'available');
   const bonusQuests = quests.filter(q => q.status === 'bonus' || (q.status === 'completed' && q.wasBonus));
+  const hasRefreshableQuests = quests.some(q => q.status === 'available' || q.status === 'bonus');
+  const canRefresh = isPremium && onRefreshQuests && refreshesUsed < 2 && hasRefreshableQuests;
+
+  const refreshButton = canRefresh ? (
+    <button
+      onClick={onRefreshQuests}
+      disabled={refreshing}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-sm font-semibold transition-colors disabled:opacity-50"
+    >
+      {refreshing ? (
+        <Loader2 className="animate-spin" size={14} />
+      ) : (
+        <RefreshCw size={14} />
+      )}
+      Changer ({2 - refreshesUsed} restant{2 - refreshesUsed > 1 ? 's' : ''})
+    </button>
+  ) : null;
 
   const renderQuestCard = (quest: Quest, isMain: boolean = false) => {
     const CategoryIcon = categories[quest.category].icon;
@@ -125,20 +142,7 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
               <span className="text-purple-400">⭐</span>
               Choisis ta quête du jour
             </h2>
-            {isPremium && onRefreshQuests && refreshesUsed < 2 && (
-              <button
-                onClick={onRefreshQuests}
-                disabled={refreshing}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-sm font-semibold transition-colors disabled:opacity-50"
-              >
-                {refreshing ? (
-                  <Loader2 className="animate-spin" size={14} />
-                ) : (
-                  <RefreshCw size={14} />
-                )}
-                Changer ({2 - refreshesUsed} restant{2 - refreshesUsed > 1 ? 's' : ''})
-              </button>
-            )}
+            {refreshButton}
           </div>
           <div className="space-y-3">
             {availableQuests.map(quest => renderQuestCard(quest))}
@@ -149,17 +153,20 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
       {/* Section quêtes bonus (collapsible) */}
       {bonusQuests.length > 0 && (
         <div>
-          <button
-            onClick={() => setShowBonusQuests(!showBonusQuests)}
-            className="flex items-center justify-between w-full mb-4"
-          >
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Star className="text-yellow-400" />
-              Quêtes bonus (+50% XP)
-              <span className="text-sm text-gray-400">({bonusQuests.filter(q => q.status !== 'completed').length} restantes)</span>
-            </h2>
-            {showBonusQuests ? <ChevronUp /> : <ChevronDown />}
-          </button>
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => setShowBonusQuests(!showBonusQuests)}
+              className="flex items-center gap-2"
+            >
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Star className="text-yellow-400" />
+                Quêtes bonus (+50% XP)
+                <span className="text-sm text-gray-400">({bonusQuests.filter(q => q.status !== 'completed').length} restantes)</span>
+              </h2>
+              {showBonusQuests ? <ChevronUp /> : <ChevronDown />}
+            </button>
+            {selectedQuest && refreshButton}
+          </div>
           {showBonusQuests && (
             <div className="space-y-3">
               {bonusQuests.map(quest => renderQuestCard(quest, false))}

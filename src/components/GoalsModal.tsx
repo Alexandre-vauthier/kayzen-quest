@@ -1,11 +1,12 @@
 import React from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Crown, Sparkles, RefreshCw, Target } from 'lucide-react';
 import type { Goal } from '../types/types';
 
 interface GoalsModalProps {
   goals: Goal[];
   newGoal: string;
   generatingThemes: boolean;
+  isPremium: boolean;
   onClose: () => void;
   onNewGoalChange: (value: string) => void;
   onAddGoal: () => void;
@@ -24,6 +25,7 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
   goals,
   newGoal,
   generatingThemes,
+  isPremium,
   onClose,
   onNewGoalChange,
   onAddGoal,
@@ -51,9 +53,11 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
                 <div key={goal.id} className="bg-white/10 rounded-lg p-4 border border-white/20">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold">{goal.label}</span>
-                    <button onClick={() => onRemoveGoal(goal.id)}>
-                      <X size={18} />
-                    </button>
+                    {(isPremium || goals.length > 1) && (
+                      <button onClick={() => onRemoveGoal(goal.id)}>
+                        <X size={18} />
+                      </button>
+                    )}
                   </div>
                   {goal.themes && goal.themes.length > 0 && (
                     <div className="mt-3 space-y-1">
@@ -77,24 +81,52 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
               ))}
             </div>
           )}
-          <input
-            type="text"
-            placeholder="Nouvel objectif..."
-            value={newGoal}
-            onChange={(e) => onNewGoalChange(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="w-full bg-white/10 rounded-lg px-4 py-3 mb-3 border border-white/20 outline-none"
-          />
-          <button onClick={onAddGoal} disabled={!newGoal.trim() || generatingThemes} className="w-full px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 disabled:opacity-50 flex items-center justify-center gap-2">
-            {generatingThemes ? (
-              <>
-                <Loader2 className="animate-spin" size={18} />
-                Génération...
-              </>
-            ) : (
-              'Ajouter'
-            )}
-          </button>
+          {isPremium || goals.length === 0 ? (
+            <>
+              <input
+                type="text"
+                placeholder="Nouvel objectif..."
+                value={newGoal}
+                onChange={(e) => onNewGoalChange(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full bg-white/10 rounded-lg px-4 py-3 mb-3 border border-white/20 outline-none"
+              />
+              <button onClick={onAddGoal} disabled={!newGoal.trim() || generatingThemes} className="w-full px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 disabled:opacity-50 flex items-center justify-center gap-2">
+                {generatingThemes ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Génération...
+                  </>
+                ) : (
+                  'Ajouter'
+                )}
+              </button>
+            </>
+          ) : (
+            <div className="bg-gradient-to-br from-yellow-500/10 to-purple-500/10 border-2 border-yellow-500/30 rounded-xl p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Crown className="text-yellow-400" size={22} />
+                <h3 className="text-lg font-bold text-yellow-400">Passe en Premium</h3>
+              </div>
+              <p className="text-sm text-gray-300">
+                Ajoute plusieurs objectifs et profite de tous les avantages Premium :
+              </p>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2 text-gray-200">
+                  <Target size={14} className="text-purple-400 shrink-0" />
+                  Objectifs multiples
+                </li>
+                <li className="flex items-center gap-2 text-gray-200">
+                  <Sparkles size={14} className="text-purple-400 shrink-0" />
+                  5 quêtes par jour (au lieu de 3)
+                </li>
+                <li className="flex items-center gap-2 text-gray-200">
+                  <RefreshCw size={14} className="text-purple-400 shrink-0" />
+                  Changer ses quêtes (2x/jour)
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
