@@ -75,6 +75,17 @@ export const allBadges: Badge[] = [
   },
 ];
 
+export const genericCompletionMessages: string[] = [
+  'Chaque petit pas compte sur le chemin de ta progression.',
+  'Une action de plus vers la meilleure version de toi-même.',
+  'La constance est la clé de toute transformation.',
+  'Tu construis tes habitudes, une quête à la fois.',
+  'Le plus important, c\'est de continuer à avancer.',
+  'Ta discipline d\'aujourd\'hui est ta liberté de demain.',
+  'Chaque effort te rapproche de ton objectif.',
+  'La progression se cache dans la régularité.',
+];
+
 export const difficultyColors: Record<DifficultyLevel, string> = {
   easy: 'border-green-500/30 bg-green-500/5',
   medium: 'border-yellow-500/30 bg-yellow-500/5',

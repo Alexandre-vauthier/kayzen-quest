@@ -8,7 +8,7 @@ import type {
 
 // Constants & Utils
 import {
-  difficultyXP, BONUS_QUEST_MULTIPLIER, allBadges, presetGoals
+  difficultyXP, BONUS_QUEST_MULTIPLIER, allBadges, presetGoals, genericCompletionMessages
 } from '../utils/constants';
 import {
   getPlayerTitle, generateThemesForGoal,
@@ -444,17 +444,27 @@ const KaizenQuest = () => {
 
     checkBadges(newPlayerData);
 
-    // Générer un message IA de félicitation (async, non bloquant)
-    generateQuestCompletionMessage(quest.title).then(msg => {
-      if (msg) {
-        setDailyQuests(prev => ({
-          ...prev,
-          quests: prev.quests.map(q =>
-            q.id === questId ? { ...q, completionMessage: msg } : q
-          )
-        }));
-      }
-    });
+    // Message de félicitation : IA personnalisée (premium) ou générique (freemium)
+    if (isPremium) {
+      generateQuestCompletionMessage(quest.title).then(msg => {
+        if (msg) {
+          setDailyQuests(prev => ({
+            ...prev,
+            quests: prev.quests.map(q =>
+              q.id === questId ? { ...q, completionMessage: msg } : q
+            )
+          }));
+        }
+      });
+    } else {
+      const msg = genericCompletionMessages[Math.floor(Math.random() * genericCompletionMessages.length)];
+      setDailyQuests(prev => ({
+        ...prev,
+        quests: prev.quests.map(q =>
+          q.id === questId ? { ...q, completionMessage: msg } : q
+        )
+      }));
+    }
 
     if (leveledUp) {
       generateLevelUpStory(newPlayerData, newLevel, currentTitle, previousTitle);
