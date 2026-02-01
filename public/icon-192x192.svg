@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e1b4b"/>
+      <stop offset="50%" style="stop-color:#581c87"/>
+      <stop offset="100%" style="stop-color:#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="sword" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#facc15"/>
+      <stop offset="50%" style="stop-color:#ec4899"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="32" fill="url(#bg)"/>
+  <!-- Sword blade -->
+  <path d="M96 30 L106 90 L96 130 L86 90 Z" fill="url(#sword)" opacity="0.9"/>
+  <!-- Sword guard -->
+  <rect x="72" y="125" width="48" height="8" rx="4" fill="#facc15"/>
+  <!-- Sword handle -->
+  <rect x="90" y="133" width="12" height="20" rx="3" fill="#a855f7"/>
+  <!-- Sword pommel -->
+  <circle cx="96" cy="158" r="6" fill="#facc15"/>
+  <!-- Star sparkles -->
+  <circle cx="55" cy="50" r="3" fill="#facc15" opacity="0.8"/>
+  <circle cx="140" cy="45" r="2.5" fill="#ec4899" opacity="0.7"/>
+  <circle cx="45" cy="100" r="2" fill="#a855f7" opacity="0.6"/>
+  <circle cx="150" cy="95" r="2.5" fill="#facc15" opacity="0.7"/>
+  <circle cx="65" cy="145" r="2" fill="#ec4899" opacity="0.5"/>
+  <circle cx="130" cy="150" r="2" fill="#a855f7" opacity="0.6"/>
+</svg>

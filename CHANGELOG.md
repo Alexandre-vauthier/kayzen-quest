@@ -6,6 +6,23 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ---
 
+## [1.4.0] - 2026-02-01
+
+### Progressive Web App (PWA)
+
+#### Added
+- **Conversion PWA** - L'application est désormais installable sur mobile et desktop comme une app native.
+- **Service Worker** - Cache automatique des assets pour un chargement rapide (Workbox via `vite-plugin-pwa`).
+- **Web Manifest** - Manifest complet avec nom, description, couleurs thème, orientation portrait, mode standalone.
+- **Icônes PWA** - Icônes SVG 192x192 et 512x512 aux couleurs du projet (épée gradient purple/pink/yellow).
+- **Meta tags Apple** - Support iOS avec `apple-mobile-web-app-capable` et `apple-touch-icon`.
+- **Auto-update** - Le service worker se met à jour automatiquement quand une nouvelle version est déployée.
+
+#### Changed
+- **Favicon** - Remplacement de `vite.svg` par l'icône Kaizen Quest.
+
+---
+
 ## [1.3.0] - 2026-02-01
 
 ### Correctifs, améliorations UX et nouvelles fonctionnalités
