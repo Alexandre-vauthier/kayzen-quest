@@ -61,7 +61,6 @@ const KaizenQuest = () => {
   const [newGoal, setNewGoal] = useState('');
   const [selectedPresetGoals, setSelectedPresetGoals] = useState<string[]>([]);
   const [timeToReset, setTimeToReset] = useState('');
-  const [completionMessage, setCompletionMessage] = useState<{ text: string; questTitle: string } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
   const checkBadges = (newPlayerData: Player) => {
@@ -353,8 +352,12 @@ const KaizenQuest = () => {
     // Générer un message IA de félicitation (async, non bloquant)
     generateQuestCompletionMessage(quest.title).then(msg => {
       if (msg) {
-        setCompletionMessage({ text: msg, questTitle: quest.title });
-        setTimeout(() => setCompletionMessage(null), 6000);
+        setDailyQuests(prev => ({
+          ...prev,
+          quests: prev.quests.map(q =>
+            q.id === questId ? { ...q, completionMessage: msg } : q
+          )
+        }));
       }
     });
 
@@ -434,23 +437,25 @@ const KaizenQuest = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="relative text-center mb-8">
+        <div className="text-center mb-8">
           <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
             ⚔️ Kaizen Quest ⚔️
           </h1>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-300 transition-colors"
-            title="Paramètres"
-          >
-            <Settings size={20} />
-          </button>
         </div>
 
         {/* Player Card */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border-2 border-purple-500/30">
           <div className="mb-4">
-            <h2 className="text-3xl font-bold">{currentTitle.emoji} {player.name}</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-bold">{currentTitle.emoji} {player.name}</h2>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 text-gray-500 hover:text-gray-300 transition-colors"
+                title="Paramètres"
+              >
+                <Settings size={20} />
+              </button>
+            </div>
             <p className="text-purple-300">Niveau {player.level}</p>
           </div>
 
@@ -485,10 +490,10 @@ const KaizenQuest = () => {
 
         {/* Daily Quests Section */}
         <div className="bg-white/5 rounded-2xl p-6 border-2 border-blue-500/30 mb-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6">
             <h2 className="text-2xl font-bold">Quêtes du jour</h2>
             {dailyQuests.quests.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
+              <div className="flex items-center gap-2 text-sm text-gray-400 mt-2">
                 <Clock size={14} />
                 <span>Prochaines quêtes dans {timeToReset}</span>
               </div>
@@ -530,13 +535,6 @@ const KaizenQuest = () => {
         </div>
 
         {/* Popups */}
-        {completionMessage && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
-            <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/40 backdrop-blur-lg rounded-xl p-4 text-center shadow-lg">
-              <p className="text-green-300 text-sm font-medium">{completionMessage.text}</p>
-            </div>
-          </div>
-        )}
         {levelUpPopup && <LevelUpPopup data={levelUpPopup} generatingStory={generatingStory} />}
         {badgePopup && <BadgePopup badge={badgePopup} />}
 

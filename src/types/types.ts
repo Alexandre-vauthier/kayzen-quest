@@ -50,6 +50,7 @@ export interface Quest {
   themeId: string | null;
   completedAt?: string;
   wasBonus?: boolean;
+  completionMessage?: string;
 }
 
 export interface DailyQuests {

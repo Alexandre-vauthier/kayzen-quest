@@ -89,6 +89,12 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
             </div>
           )}
         </div>
+
+        {isCompleted && quest.completionMessage && (
+          <div className="mt-3 px-4 py-3 rounded-lg bg-green-500/5 border border-green-500/20">
+            <p className="text-green-300/80 text-sm italic">{quest.completionMessage}</p>
+          </div>
+        )}
       </div>
     );
   };
