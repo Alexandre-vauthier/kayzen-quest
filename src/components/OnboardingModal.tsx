@@ -4,54 +4,45 @@ import { presetGoals } from '../utils/constants';
 import type { PresetGoal } from '../types/types';
 
 interface OnboardingModalProps {
-  selectedPresetGoals: string[];
+  selectedPresetGoal: string | null;
   newGoal: string;
   generatingThemes: boolean;
-  onTogglePresetGoal: (goalId: string) => void;
+  onSelectPresetGoal: (goalId: string) => void;
   onNewGoalChange: (value: string) => void;
   onComplete: () => void;
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({
-  selectedPresetGoals,
+  selectedPresetGoal,
   newGoal,
   generatingThemes,
-  onTogglePresetGoal,
+  onSelectPresetGoal,
   onNewGoalChange,
   onComplete
 }) => {
+  const hasSelection = selectedPresetGoal !== null || newGoal.trim().length > 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-6 flex items-center justify-center">
       <div className="max-w-2xl w-full">
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">Bienvenue, Aventurier</h1>
+          <h1 className="text-4xl sm:text-6xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">Bienvenue, Aventurier</h1>
           <p className="text-xl text-purple-300">Avant de commencer...</p>
         </div>
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border-2 border-purple-500/30">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border-2 border-purple-500/30">
+          <h2 className="text-xl sm:text-2xl font-bold mb-2 flex items-center gap-2">
             <Target className="text-purple-400" />
-            Qui veux-tu devenir ?
+            Choisis ton objectif principal
           </h2>
-          <p className="text-gray-300 mb-6">Choisis tes objectifs</p>
+          <p className="text-gray-300 mb-6 text-sm">Tes quêtes quotidiennes seront basées sur cet objectif.</p>
 
-          <div className="mb-6">
-            <label className="block text-sm font-semibold mb-2">Ton objectif</label>
-            <input
-              type="text"
-              placeholder="Indiquez sur quoi vous souhaitez progresser"
-              value={newGoal}
-              onChange={(e) => onNewGoalChange(e.target.value)}
-              className="w-full bg-white/10 rounded-lg px-4 py-3 border border-white/20 focus:border-purple-500 outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             {presetGoals.map((goal: PresetGoal) => (
               <button
                 key={goal.id}
-                onClick={() => onTogglePresetGoal(goal.id)}
+                onClick={() => onSelectPresetGoal(goal.id)}
                 className={`p-4 rounded-lg border-2 text-left transition-all ${
-                  selectedPresetGoals.includes(goal.id)
+                  selectedPresetGoal === goal.id
                     ? 'bg-purple-500/30 border-purple-500'
                     : 'bg-white/5 border-white/20 hover:border-purple-500/50'
                 }`}
@@ -62,9 +53,20 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
             ))}
           </div>
 
+          <div className="mb-6">
+            <label className="block text-sm text-gray-400 mb-2">Ou définis le tien</label>
+            <input
+              type="text"
+              placeholder="Ex : Apprendre à cuisiner sainement"
+              value={newGoal}
+              onChange={(e) => onNewGoalChange(e.target.value)}
+              className="w-full bg-white/10 rounded-lg px-4 py-3 border border-white/20 focus:border-purple-500 outline-none text-sm"
+            />
+          </div>
+
           <button
             onClick={onComplete}
-            disabled={selectedPresetGoals.length === 0 && !newGoal.trim() || generatingThemes}
+            disabled={!hasSelection || generatingThemes}
             className="w-full py-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-bold text-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {generatingThemes ? (

@@ -71,7 +71,7 @@ const KaizenQuest = () => {
   const [perfectDayPopup, setPerfectDayPopup] = useState(false);
 
   const [newGoal, setNewGoal] = useState('');
-  const [selectedPresetGoals, setSelectedPresetGoals] = useState<string[]>([]);
+  const [selectedPresetGoal, setSelectedPresetGoal] = useState<string | null>(null);
   const [timeToReset, setTimeToReset] = useState('');
   const [showSettings, setShowSettings] = useState(false);
 
@@ -197,19 +197,18 @@ const KaizenQuest = () => {
   }, [player, dailyQuests, questHistory, saveData]);
 
   const completeOnboarding = async () => {
-    const goals = [
-      ...selectedPresetGoals.map(id => presetGoals.find(g => g.id === id)!.label),
-      ...(newGoal ? [newGoal] : [])
-    ];
+    const goalLabel = selectedPresetGoal
+      ? presetGoals.find(g => g.id === selectedPresetGoal)!.label
+      : newGoal.trim();
+
+    if (!goalLabel) return;
 
     setGeneratingThemes(true);
     setPlayer(prev => ({ ...prev, goals: [], onboardingComplete: true }));
     setShowOnboarding(false);
 
-    for (const goal of goals) {
-      const newGoal = await generateThemesForGoal(goal);
-      setPlayer(prev => ({ ...prev, goals: [...(prev.goals || []), newGoal] }));
-    }
+    const goal = await generateThemesForGoal(goalLabel);
+    setPlayer(prev => ({ ...prev, goals: [goal] }));
 
     setGeneratingThemes(false);
   };
@@ -455,17 +454,17 @@ const KaizenQuest = () => {
   if (showOnboarding) {
     return (
       <OnboardingModal
-        selectedPresetGoals={selectedPresetGoals}
+        selectedPresetGoal={selectedPresetGoal}
         newGoal={newGoal}
         generatingThemes={generatingThemes}
-        onTogglePresetGoal={(goalId) => {
-          if (selectedPresetGoals.includes(goalId)) {
-            setSelectedPresetGoals(selectedPresetGoals.filter(id => id !== goalId));
-          } else {
-            setSelectedPresetGoals([...selectedPresetGoals, goalId]);
-          }
+        onSelectPresetGoal={(goalId) => {
+          setSelectedPresetGoal(selectedPresetGoal === goalId ? null : goalId);
+          setNewGoal('');
         }}
-        onNewGoalChange={setNewGoal}
+        onNewGoalChange={(value) => {
+          setNewGoal(value);
+          setSelectedPresetGoal(null);
+        }}
         onComplete={completeOnboarding}
       />
     );
