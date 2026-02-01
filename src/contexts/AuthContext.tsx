@@ -3,6 +3,7 @@ import {
   User,
   onAuthStateChanged,
   signInWithPopup,
+  reauthenticateWithPopup,
   GoogleAuthProvider,
   OAuthProvider,
   signOut as firebaseSignOut,
@@ -58,6 +59,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteAccount = async () => {
     if (!user) return;
+    // Re-authenticate first to satisfy Firebase's recent-login requirement
+    const providerId = user.providerData[0]?.providerId;
+    const provider = providerId === 'apple.com'
+      ? new OAuthProvider('apple.com')
+      : new GoogleAuthProvider();
+    await reauthenticateWithPopup(user, provider);
+    // Now delete data then account
     await deleteUserData(user.uid);
     await deleteUser(user);
   };
