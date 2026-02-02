@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings } from 'lucide-react';
+import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings, BarChart3 } from 'lucide-react';
 
 // Types
 import type {
@@ -32,6 +32,7 @@ import BadgesModal from './BadgesModal';
 import GoalsModal from './GoalsModal';
 import HistoryModal from './HistoryModal';
 import SettingsModal from './SettingsModal';
+import ProgressDashboard from './ProgressDashboard';
 
 const KaizenQuest = () => {
   const { user } = useAuth();
@@ -74,6 +75,7 @@ const KaizenQuest = () => {
   const [selectedPresetGoal, setSelectedPresetGoal] = useState<string | null>(null);
   const [timeToReset, setTimeToReset] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   const checkBadges = (newPlayerData: Player) => {
     if (!newPlayerData.badges) newPlayerData.badges = [];
@@ -439,7 +441,9 @@ const KaizenQuest = () => {
       date: new Date().toISOString(),
       goalId: quest.goalId,
       themeId: quest.themeId,
-      wasPerfectDay
+      wasPerfectDay,
+      category: quest.category,
+      difficulty: quest.difficulty
     }]);
 
     checkBadges(newPlayerData);
@@ -591,6 +595,15 @@ const KaizenQuest = () => {
               <p className="text-xs text-gray-300">Succès</p>
             </button>
           </div>
+          {isPremium && (
+            <button
+              onClick={() => setShowDashboard(true)}
+              className="w-full mt-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 rounded-lg p-3 transition-colors flex items-center justify-center gap-2"
+            >
+              <BarChart3 className="text-purple-400" size={20} />
+              <p className="text-sm text-purple-300 font-semibold">Ma progression</p>
+            </button>
+          )}
         </div>
 
         {/* Daily Quests Section */}
@@ -706,6 +719,13 @@ const KaizenQuest = () => {
             onClose={() => setShowSettings(false)}
             isPremium={isPremium}
             onTogglePremium={() => setPlayer(prev => ({ ...prev, premium: !prev.premium }))}
+          />
+        )}
+        {showDashboard && (
+          <ProgressDashboard
+            player={player}
+            history={questHistory}
+            onClose={() => setShowDashboard(false)}
           />
         )}
       </div>

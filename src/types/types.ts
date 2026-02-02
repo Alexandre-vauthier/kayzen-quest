@@ -67,6 +67,8 @@ export interface QuestHistory {
   goalId: string | null;
   themeId: string | null;
   wasPerfectDay: boolean;
+  category?: CategoryType;
+  difficulty?: DifficultyLevel;
 }
 
 export interface Badge {
