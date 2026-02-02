@@ -555,7 +555,7 @@ const KaizenQuest = () => {
               <h2 className="text-3xl font-bold">{currentTitle.emoji} {player.name}</h2>
               <button
                 onClick={() => setShowSettings(true)}
-                className="p-2 text-gray-500 hover:text-gray-300 transition-colors"
+                className="p-2 text-purple-400 hover:text-purple-300 transition-colors"
                 title="Paramètres"
               >
                 <Settings size={20} />
@@ -607,27 +607,52 @@ const KaizenQuest = () => {
 
           {dailyQuests.quests.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
-              <p className="text-lg mb-2">Génère tes {questCount} quêtes quotidiennes</p>
-              <p className="text-sm mb-6">Choisis-en 1 comme ta quête du jour, les {questCount - 1} autres seront des quêtes bonus (+50% XP)</p>
-              <div className="flex justify-center">
-                <button
-                  onClick={generateQuests}
-                  disabled={generating}
-                  className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {generating ? (
-                    <>
-                      <Loader2 className="animate-spin" size={18} />
-                      Génération...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles size={18} />
-                      Générer mes quêtes
-                    </>
-                  )}
-                </button>
-              </div>
+              {generatingThemes ? (
+                <>
+                  <Loader2 className="animate-spin mx-auto mb-4 text-purple-400" size={32} />
+                  <p className="text-lg mb-2">Préparation de tes objectifs...</p>
+                  <p className="text-sm">Tes quêtes seront prêtes dans un instant</p>
+                </>
+              ) : player.goals.length === 0 ? (
+                <>
+                  <Target className="mx-auto mb-4 text-purple-400" size={32} />
+                  <p className="text-lg mb-2">Définis un objectif pour commencer</p>
+                  <p className="text-sm mb-6">Tes quêtes quotidiennes seront basées sur ton objectif</p>
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => setShowGoals(true)}
+                      className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 text-white transition-all"
+                    >
+                      <Target size={18} />
+                      Définir mon objectif
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg mb-2">Génère tes {questCount} quêtes quotidiennes</p>
+                  <p className="text-sm mb-6">Choisis-en 1 comme ta quête du jour, les {questCount - 1} autres seront des quêtes bonus (+50% XP)</p>
+                  <div className="flex justify-center">
+                    <button
+                      onClick={generateQuests}
+                      disabled={generating}
+                      className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      {generating ? (
+                        <>
+                          <Loader2 className="animate-spin" size={18} />
+                          Génération...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={18} />
+                          Générer mes quêtes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <QuestSelection
