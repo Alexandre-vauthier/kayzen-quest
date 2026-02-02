@@ -1,27 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
 import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings, BarChart3 } from 'lucide-react';
 
-// Types
-import type {
-  Player, DailyQuests, QuestHistory, Badge, LevelUpPopupData, Quest
-} from '../types/types';
-
-// Constants & Utils
-import {
-  difficultyXP, BONUS_QUEST_MULTIPLIER, allBadges, presetGoals, genericCompletionMessages
-} from '../utils/constants';
-import {
-  getPlayerTitle, generateThemesForGoal,
-  generateQuestsFromAPI, generateLevelUpStoryFromAPI, generateQuestCompletionMessage
-} from '../utils/utils';
-
-// Auth & Firestore
-import { useAuth } from '../contexts/AuthContext';
-import {
-  loadPlayer, loadDailyQuests, loadHistory,
-  savePlayer, saveDailyQuests, saveHistory,
-  saveUserProfile, migrateLocalStorageToFirestore
-} from '../services/firestoreService';
+// Hooks
+import { useModals } from '../hooks/useModals';
+import { usePopups } from '../hooks/usePopups';
+import { usePlayer } from '../hooks/usePlayer';
+import { useQuests } from '../hooks/useQuests';
+import { useFirestoreSync } from '../hooks/useFirestoreSync';
 
 // Components
 import QuestSelection from './QuestSelection';
@@ -35,479 +19,43 @@ import SettingsModal from './SettingsModal';
 import ProgressDashboard from './ProgressDashboard';
 
 const KaizenQuest = () => {
-  const { user } = useAuth();
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dataLoadedRef = useRef(false);
+  const modals = useModals();
+  const popups = usePopups();
+  const {
+    player, setPlayer, isPremium, currentTitle, questCount,
+    generatingThemes, newGoal, setNewGoal, selectedPresetGoal, setSelectedPresetGoal,
+    completeOnboarding, addGoal, removeGoal, togglePremium,
+  } = usePlayer();
 
-  const [player, setPlayer] = useState<Player>({
-    name: "Aventurier",
-    level: 1,
-    xp: 0,
-    xpToNext: 100,
-    badges: [],
-    questsCompleted: 0,
-    hardQuestsCompleted: 0,
-    perfectDays: 0,
-    goals: [],
-    storyChapters: [],
-    onboardingComplete: false
+  const {
+    dailyQuests, setDailyQuests, questHistory, setQuestHistory,
+    generating, timeToReset,
+    generateQuests, refreshQuests, selectQuest, completeQuest,
+  } = useQuests(player, isPremium, questCount, {
+    setPlayer,
+    onBadgeEarned: popups.showBadge,
+    onPerfectDay: popups.showPerfectDay,
+    onLevelUp: popups.showLevelUp,
+    setGeneratingStory: popups.setGeneratingStory,
   });
 
-  const [dailyQuests, setDailyQuests] = useState<DailyQuests>({
-    quests: [],
-    selectedQuestId: null,
-    date: new Date().toDateString()
+  useFirestoreSync({
+    player,
+    dailyQuests,
+    questHistory,
+    setPlayer: (p) => setPlayer(p),
+    setDailyQuests: (d) => setDailyQuests(d),
+    setQuestHistory: (h) => setQuestHistory(h),
+    openOnboarding: () => modals.open('onboarding'),
   });
 
-  const [questHistory, setQuestHistory] = useState<QuestHistory[]>([]);
-  const [showBadges, setShowBadges] = useState(false);
-  const [showGoals, setShowGoals] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [generatingStory, setGeneratingStory] = useState(false);
-  const [generatingThemes, setGeneratingThemes] = useState(false);
-  const [levelUpPopup, setLevelUpPopup] = useState<LevelUpPopupData | null>(null);
-  const [badgePopup, setBadgePopup] = useState<Badge | null>(null);
-  const [perfectDayPopup, setPerfectDayPopup] = useState(false);
-
-  const [newGoal, setNewGoal] = useState('');
-  const [selectedPresetGoal, setSelectedPresetGoal] = useState<string | null>(null);
-  const [timeToReset, setTimeToReset] = useState('');
-  const [showSettings, setShowSettings] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
-
-  const checkBadges = (newPlayerData: Player) => {
-    if (!newPlayerData.badges) newPlayerData.badges = [];
-    const newBadges: Badge[] = [];
-    allBadges.forEach(badge => {
-      if (!newPlayerData.badges.includes(badge.id) && badge.condition(newPlayerData)) {
-        newBadges.push(badge);
-        newPlayerData.badges.push(badge.id);
-      }
-    });
-
-    if (newBadges.length > 0) {
-      setBadgePopup(newBadges[0]);
-      setTimeout(() => setBadgePopup(null), 4000);
-    }
+  // Onboarding handler
+  const handleOnboarding = async () => {
+    modals.close('onboarding');
+    await completeOnboarding();
   };
 
-  // Réinitialisation quotidienne
-  useEffect(() => {
-    const checkDailyReset = () => {
-      const today = new Date().toDateString();
-      if (dailyQuests.date !== today) {
-        setDailyQuests({
-          quests: [],
-          selectedQuestId: null,
-          date: today,
-          questRefreshesUsed: 0
-        });
-      }
-    };
-
-    checkDailyReset();
-    const interval = setInterval(checkDailyReset, 60000);
-    return () => clearInterval(interval);
-  }, [dailyQuests.date]);
-
-  // Timer countdown jusqu'à minuit
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const midnight = new Date(now);
-      midnight.setHours(24, 0, 0, 0);
-      const diff = midnight.getTime() - now.getTime();
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      setTimeToReset(`${hours.toString().padStart(2, '0')}h${minutes.toString().padStart(2, '0')}m${seconds.toString().padStart(2, '0')}s`);
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (!user) return;
-    const loadData = async () => {
-      try {
-        // Migrate localStorage data on first login
-        await migrateLocalStorageToFirestore(user.uid);
-
-        // Save/update user profile
-        await saveUserProfile(user.uid, {
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          lastLoginAt: new Date().toISOString(),
-        });
-
-        // Load from Firestore
-        const playerData = await loadPlayer(user.uid);
-        const questsData = await loadDailyQuests(user.uid);
-        const historyData = await loadHistory(user.uid);
-
-        if (playerData) {
-          setPlayer(playerData);
-          if (!playerData.onboardingComplete) setShowOnboarding(true);
-        } else {
-          setShowOnboarding(true);
-        }
-
-        if (questsData && questsData.date === new Date().toDateString()) {
-          setDailyQuests(questsData);
-        }
-
-        if (historyData && historyData.length > 0) {
-          setQuestHistory(historyData);
-        }
-
-        dataLoadedRef.current = true;
-      } catch (err) {
-        console.error('Load from Firestore failed:', err);
-        setShowOnboarding(true);
-        dataLoadedRef.current = true;
-      }
-    };
-    loadData();
-  }, [user]);
-
-  const saveData = useCallback(async () => {
-    if (!user) return;
-    try {
-      await Promise.all([
-        savePlayer(user.uid, player),
-        saveDailyQuests(user.uid, dailyQuests),
-        saveHistory(user.uid, questHistory),
-      ]);
-    } catch (err) {
-      console.error('Save to Firestore failed:', err);
-    }
-  }, [user, player, dailyQuests, questHistory]);
-
-  useEffect(() => {
-    if (!player.onboardingComplete || !dataLoadedRef.current) return;
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    saveTimeoutRef.current = setTimeout(() => {
-      saveData();
-    }, 1000);
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    };
-  }, [player, dailyQuests, questHistory, saveData]);
-
-  const completeOnboarding = async () => {
-    const goalLabel = selectedPresetGoal
-      ? presetGoals.find(g => g.id === selectedPresetGoal)!.label
-      : newGoal.trim();
-
-    if (!goalLabel) return;
-
-    setGeneratingThemes(true);
-    setPlayer(prev => ({ ...prev, goals: [], onboardingComplete: true }));
-    setShowOnboarding(false);
-
-    const goal = await generateThemesForGoal(goalLabel);
-    setPlayer(prev => ({ ...prev, goals: [goal] }));
-
-    setGeneratingThemes(false);
-  };
-
-  const addGoal = async () => {
-    if (newGoal.trim()) {
-      setGeneratingThemes(true);
-      const goal = await generateThemesForGoal(newGoal.trim());
-      setPlayer(prev => ({ ...prev, goals: [...(prev.goals || []), goal] }));
-      setNewGoal('');
-      setGeneratingThemes(false);
-    }
-  };
-
-  const removeGoal = (goalId: string) => {
-    setPlayer(prev => ({ ...prev, goals: (prev.goals || []).filter(g => g.id !== goalId) }));
-  };
-
-  const isPremium = player.premium === true;
-  const questCount = isPremium ? 5 : 3;
-
-  const generateQuests = async () => {
-    setGenerating(true);
-    try {
-      const recentQuests = questHistory.slice(-15).map(q => q.title).join(', ');
-
-      const goalsInfo = (player.goals || []).map(goal => {
-        const themesInfo = goal.themes.map(t => {
-          let suggestedDifficulty = 'easy';
-          if (t.developmentLevel === 'medium') suggestedDifficulty = 'medium';
-          if (t.developmentLevel === 'high' || t.developmentLevel === 'advanced') suggestedDifficulty = 'hard';
-
-          return `${t.name} [goalId="${goal.id}", themeId="${t.id}"] (${t.questsCompleted} quêtes, niveau: ${t.developmentLevel}, difficulté suggérée: ${suggestedDifficulty})`;
-        }).join('\n  - ');
-        return `Objectif "${goal.label}" [goalId="${goal.id}"]:\n  - ${themesInfo}`;
-      }).join('\n\n');
-
-      const hasGoals = player.goals && player.goals.length > 0;
-
-      const generatedQuests = await generateQuestsFromAPI(recentQuests, goalsInfo, hasGoals, questCount);
-
-      const newQuests: Quest[] = generatedQuests.map((q: any) => ({
-        ...q,
-        status: 'available' as const,
-        isSelectedQuest: false
-      }));
-
-      setDailyQuests({
-        quests: newQuests,
-        selectedQuestId: null,
-        date: new Date().toDateString(),
-        questRefreshesUsed: 0
-      });
-    } catch (err) {
-      alert('Erreur génération');
-    }
-    setGenerating(false);
-  };
-
-  const refreshQuests = async () => {
-    const refreshesUsed = dailyQuests.questRefreshesUsed || 0;
-    if (refreshesUsed >= 2) return;
-
-    setGenerating(true);
-    try {
-      const refreshableQuests = dailyQuests.quests.filter(q => q.status === 'available' || q.status === 'bonus');
-      const keptQuests = dailyQuests.quests.filter(q => q.status !== 'available' && q.status !== 'bonus');
-      const countToGenerate = refreshableQuests.length;
-
-      if (countToGenerate === 0) {
-        setGenerating(false);
-        return;
-      }
-
-      const recentQuests = [
-        ...questHistory.slice(-15).map(q => q.title),
-        ...keptQuests.map(q => q.title)
-      ].join(', ');
-
-      const goalsInfo = (player.goals || []).map(goal => {
-        const themesInfo = goal.themes.map(t => {
-          let suggestedDifficulty = 'easy';
-          if (t.developmentLevel === 'medium') suggestedDifficulty = 'medium';
-          if (t.developmentLevel === 'high' || t.developmentLevel === 'advanced') suggestedDifficulty = 'hard';
-
-          return `${t.name} [goalId="${goal.id}", themeId="${t.id}"] (${t.questsCompleted} quêtes, niveau: ${t.developmentLevel}, difficulté suggérée: ${suggestedDifficulty})`;
-        }).join('\n  - ');
-        return `Objectif "${goal.label}" [goalId="${goal.id}"]:\n  - ${themesInfo}`;
-      }).join('\n\n');
-
-      const hasGoals = player.goals && player.goals.length > 0;
-
-      const generatedQuests = await generateQuestsFromAPI(recentQuests, goalsInfo, hasGoals, countToGenerate);
-
-      const hasSelectedQuest = keptQuests.some(q => q.status === 'selected');
-      const newQuests: Quest[] = generatedQuests.map((q: any) => ({
-        ...q,
-        status: hasSelectedQuest ? 'bonus' as const : 'available' as const,
-        isSelectedQuest: false
-      }));
-
-      setDailyQuests(prev => ({
-        ...prev,
-        quests: [...keptQuests, ...newQuests],
-        questRefreshesUsed: refreshesUsed + 1
-      }));
-    } catch (err) {
-      alert('Erreur génération');
-    }
-    setGenerating(false);
-  };
-
-  const selectQuest = (questId: number) => {
-    setDailyQuests(prev => {
-      const updatedQuests = prev.quests.map(q => {
-        if (q.id === questId) {
-          return { ...q, status: 'selected' as const, isSelectedQuest: true };
-        } else if (q.status === 'available') {
-          return { ...q, status: 'bonus' as const, isSelectedQuest: false };
-        }
-        return q;
-      });
-
-      return {
-        ...prev,
-        quests: updatedQuests,
-        selectedQuestId: questId
-      };
-    });
-  };
-
-  const completeQuest = (questId: number) => {
-    const quest = dailyQuests.quests.find(q => q.id === questId);
-    if (!quest || quest.status === 'completed') return;
-
-    const isBonus = quest.status === 'bonus';
-    const baseXP = difficultyXP[quest.difficulty];
-    const xpGained = isBonus ? Math.floor(baseXP * BONUS_QUEST_MULTIPLIER) : baseXP;
-
-    const newXp = player.xp + xpGained;
-    let newLevel = player.level;
-    let newXpToNext = player.xpToNext;
-    let finalXp = newXp;
-    let leveledUp = false;
-
-    if (newXp >= player.xpToNext) {
-      newLevel++;
-      finalXp = newXp - player.xpToNext;
-      newXpToNext = Math.floor(player.xpToNext * 1.2);
-      leveledUp = true;
-    }
-
-    // Mise à jour des thèmes directement dans les goals
-    let updatedGoals = player.goals || [];
-    if (quest.goalId && quest.themeId) {
-      updatedGoals = updatedGoals.map(goal => {
-        if (goal.id !== quest.goalId) return goal;
-        const updatedThemes = goal.themes.map(theme => {
-          if (theme.id !== quest.themeId) return theme;
-          const newCount = theme.questsCompleted + 1;
-          let devLevel: any = 'none';
-          if (newCount <= 3) devLevel = 'low';
-          else if (newCount <= 7) devLevel = 'medium';
-          else if (newCount <= 15) devLevel = 'high';
-          else devLevel = 'advanced';
-          return { ...theme, questsCompleted: newCount, lastTouched: new Date().toISOString(), developmentLevel: devLevel };
-        });
-        return { ...goal, themes: updatedThemes };
-      });
-    }
-
-    // Mise à jour du joueur
-    const newPlayerData: Player = {
-      ...player,
-      level: newLevel,
-      xp: finalXp,
-      xpToNext: newXpToNext,
-      questsCompleted: player.questsCompleted + 1,
-      hardQuestsCompleted: player.hardQuestsCompleted + (quest.difficulty === 'hard' ? 1 : 0),
-      perfectDays: player.perfectDays,
-      goals: updatedGoals
-    };
-
-    const currentTitle = getPlayerTitle(newPlayerData.level);
-    const previousTitle = getPlayerTitle(player.level);
-    newPlayerData.name = currentTitle.name;
-
-    // Mise à jour des quêtes
-    const updatedQuests = dailyQuests.quests.map(q =>
-      q.id === questId ? { ...q, status: 'completed' as const, completedAt: new Date().toISOString(), wasBonus: isBonus } : q
-    );
-
-    const completedCount = updatedQuests.filter(q => q.status === 'completed').length;
-    const totalQuests = updatedQuests.length;
-    const wasPerfectDay = completedCount === totalQuests;
-
-    if (wasPerfectDay) {
-      newPlayerData.perfectDays++;
-      setPerfectDayPopup(true);
-      setTimeout(() => setPerfectDayPopup(false), 5000);
-    }
-
-    setDailyQuests(prev => ({
-      ...prev,
-      quests: updatedQuests
-    }));
-
-    setQuestHistory(prev => [...prev, {
-      title: quest.title,
-      date: new Date().toISOString(),
-      goalId: quest.goalId,
-      themeId: quest.themeId,
-      wasPerfectDay,
-      category: quest.category,
-      difficulty: quest.difficulty
-    }]);
-
-    checkBadges(newPlayerData);
-
-    // Message de félicitation : IA personnalisée (premium) ou générique (freemium)
-    if (isPremium) {
-      generateQuestCompletionMessage(quest.title).then(msg => {
-        if (msg) {
-          setDailyQuests(prev => ({
-            ...prev,
-            quests: prev.quests.map(q =>
-              q.id === questId ? { ...q, completionMessage: msg } : q
-            )
-          }));
-        }
-      });
-    } else {
-      const msg = genericCompletionMessages[Math.floor(Math.random() * genericCompletionMessages.length)];
-      setDailyQuests(prev => ({
-        ...prev,
-        quests: prev.quests.map(q =>
-          q.id === questId ? { ...q, completionMessage: msg } : q
-        )
-      }));
-    }
-
-    if (leveledUp) {
-      generateLevelUpStory(newPlayerData, newLevel, currentTitle, previousTitle);
-    } else {
-      setPlayer(newPlayerData);
-    }
-  };
-
-  const generateLevelUpStory = async (newPlayerData: Player, newLevel: number, currentTitle: any, previousTitle: any) => {
-    setGeneratingStory(true);
-
-    const recentQuests = questHistory.slice(-15);
-    const previousChapters = (player.storyChapters || []).slice(-2);
-    const goalsText = (player.goals || []).map(g => g.label).join(', ');
-
-    try {
-      const story = await generateLevelUpStoryFromAPI(newLevel, currentTitle, goalsText, recentQuests, previousChapters);
-
-      const newChapter = {
-        level: newLevel,
-        title: currentTitle.name,
-        story: story,
-        date: new Date().toISOString()
-      };
-
-      const updatedPlayerData = {
-        ...newPlayerData,
-        storyChapters: [...(player.storyChapters || []), newChapter]
-      };
-
-      setPlayer(updatedPlayerData);
-
-      setLevelUpPopup({
-        level: newLevel,
-        title: currentTitle,
-        titleChanged: currentTitle.name !== previousTitle.name,
-        story: story
-      });
-      setTimeout(() => setLevelUpPopup(null), 8000);
-    } catch (err) {
-      setPlayer(newPlayerData);
-      setLevelUpPopup({
-        level: newLevel,
-        title: currentTitle,
-        titleChanged: currentTitle.name !== previousTitle.name,
-        story: null
-      });
-      setTimeout(() => setLevelUpPopup(null), 4000);
-    }
-
-    setGeneratingStory(false);
-  };
-
-  const currentTitle = getPlayerTitle(player.level);
-
-  if (showOnboarding) {
+  if (modals.isOpen('onboarding')) {
     return (
       <OnboardingModal
         selectedPresetGoal={selectedPresetGoal}
@@ -521,7 +69,7 @@ const KaizenQuest = () => {
           setNewGoal(value);
           setSelectedPresetGoal(null);
         }}
-        onComplete={completeOnboarding}
+        onComplete={handleOnboarding}
       />
     );
   }
@@ -541,7 +89,7 @@ const KaizenQuest = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">{currentTitle.emoji} {player.name}</h2>
               <button
-                onClick={() => setShowSettings(true)}
+                onClick={() => modals.open('settings')}
                 className="p-2 text-purple-400 hover:text-purple-300 transition-colors"
                 title="Paramètres"
               >
@@ -565,22 +113,22 @@ const KaizenQuest = () => {
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={() => setShowHistory(true)} className="bg-pink-500/20 hover:bg-pink-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
+            <button onClick={() => modals.open('history')} className="bg-pink-500/20 hover:bg-pink-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
               <Trophy className="text-pink-400" size={28} />
               <p className="text-xs text-gray-300">Histoire</p>
             </button>
-            <button onClick={() => setShowGoals(true)} className="bg-purple-500/20 hover:bg-purple-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
+            <button onClick={() => modals.open('goals')} className="bg-purple-500/20 hover:bg-purple-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
               <Target className="text-purple-400" size={28} />
               <p className="text-xs text-gray-300">Objectifs</p>
             </button>
-            <button onClick={() => setShowBadges(true)} className="bg-yellow-500/20 hover:bg-yellow-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
+            <button onClick={() => modals.open('badges')} className="bg-yellow-500/20 hover:bg-yellow-500/30 rounded-lg p-4 transition-colors flex flex-col items-center gap-2">
               <Award className="text-yellow-400" size={28} />
               <p className="text-xs text-gray-300">Succès</p>
             </button>
           </div>
           {isPremium && (
             <button
-              onClick={() => setShowDashboard(true)}
+              onClick={() => modals.open('dashboard')}
               className="w-full mt-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 rounded-lg p-3 transition-colors flex items-center justify-center gap-2"
             >
               <BarChart3 className="text-purple-400" size={20} />
@@ -616,7 +164,7 @@ const KaizenQuest = () => {
                   <p className="text-sm mb-6">Tes quêtes quotidiennes seront basées sur ton objectif</p>
                   <div className="flex justify-center">
                     <button
-                      onClick={() => setShowGoals(true)}
+                      onClick={() => modals.open('goals')}
                       className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 text-white transition-all"
                     >
                       <Target size={18} />
@@ -665,10 +213,10 @@ const KaizenQuest = () => {
         </div>
 
         {/* Popups */}
-        {levelUpPopup && <LevelUpPopup data={levelUpPopup} generatingStory={generatingStory} />}
-        {badgePopup && <BadgePopup badge={badgePopup} />}
+        {popups.levelUpPopup && <LevelUpPopup data={popups.levelUpPopup} generatingStory={popups.generatingStory} />}
+        {popups.badgePopup && <BadgePopup badge={popups.badgePopup} />}
 
-        {perfectDayPopup && (
+        {popups.perfectDayPopup && (
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/50">
             <div className="bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 p-1 rounded-3xl animate-pulse">
               <div className="bg-slate-900 rounded-3xl p-8 text-center">
@@ -683,32 +231,32 @@ const KaizenQuest = () => {
         )}
 
         {/* Modals */}
-        {showHistory && <HistoryModal storyChapters={player.storyChapters} onClose={() => setShowHistory(false)} />}
-        {showBadges && <BadgesModal player={player} onClose={() => setShowBadges(false)} />}
-        {showGoals && (
+        {modals.isOpen('history') && <HistoryModal storyChapters={player.storyChapters} onClose={() => modals.close('history')} />}
+        {modals.isOpen('badges') && <BadgesModal player={player} onClose={() => modals.close('badges')} />}
+        {modals.isOpen('goals') && (
           <GoalsModal
             goals={player.goals}
             newGoal={newGoal}
             generatingThemes={generatingThemes}
             isPremium={isPremium}
-            onClose={() => setShowGoals(false)}
+            onClose={() => modals.close('goals')}
             onNewGoalChange={setNewGoal}
             onAddGoal={addGoal}
             onRemoveGoal={removeGoal}
           />
         )}
-        {showSettings && (
+        {modals.isOpen('settings') && (
           <SettingsModal
-            onClose={() => setShowSettings(false)}
+            onClose={() => modals.close('settings')}
             isPremium={isPremium}
-            onTogglePremium={() => setPlayer(prev => ({ ...prev, premium: !prev.premium }))}
+            onTogglePremium={togglePremium}
           />
         )}
-        {showDashboard && (
+        {modals.isOpen('dashboard') && (
           <ProgressDashboard
             player={player}
             history={questHistory}
-            onClose={() => setShowDashboard(false)}
+            onClose={() => modals.close('dashboard')}
           />
         )}
       </div>
