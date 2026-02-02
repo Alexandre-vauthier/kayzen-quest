@@ -343,46 +343,9 @@ const KaizenQuest = () => {
     });
   };
 
-  const updateThemeProgress = (goalId: string | null, themeId: string | null) => {
-    if (!goalId || !themeId) return;
-
-    setPlayer(prev => {
-      const goals = prev.goals || [];
-      const updatedGoals = goals.map(goal => {
-        if (goal.id !== goalId) return goal;
-
-        const updatedThemes = goal.themes.map(theme => {
-          if (theme.id !== themeId) return theme;
-
-          const newCount = theme.questsCompleted + 1;
-          let newLevel: any = "none";
-          if (newCount <= 3) newLevel = "low";
-          else if (newCount <= 7) newLevel = "medium";
-          else if (newCount <= 15) newLevel = "high";
-          else newLevel = "advanced";
-
-          return {
-            ...theme,
-            questsCompleted: newCount,
-            lastTouched: new Date().toISOString(),
-            developmentLevel: newLevel
-          };
-        });
-
-        return { ...goal, themes: updatedThemes };
-      });
-
-      return { ...prev, goals: updatedGoals };
-    });
-  };
-
   const completeQuest = (questId: number) => {
     const quest = dailyQuests.quests.find(q => q.id === questId);
     if (!quest || quest.status === 'completed') return;
-
-    if (quest.goalId && quest.themeId) {
-      updateThemeProgress(quest.goalId, quest.themeId);
-    }
 
     const isBonus = quest.status === 'bonus';
     const baseXP = difficultyXP[quest.difficulty];
@@ -401,6 +364,25 @@ const KaizenQuest = () => {
       leveledUp = true;
     }
 
+    // Mise à jour des thèmes directement dans les goals
+    let updatedGoals = player.goals || [];
+    if (quest.goalId && quest.themeId) {
+      updatedGoals = updatedGoals.map(goal => {
+        if (goal.id !== quest.goalId) return goal;
+        const updatedThemes = goal.themes.map(theme => {
+          if (theme.id !== quest.themeId) return theme;
+          const newCount = theme.questsCompleted + 1;
+          let devLevel: any = 'none';
+          if (newCount <= 3) devLevel = 'low';
+          else if (newCount <= 7) devLevel = 'medium';
+          else if (newCount <= 15) devLevel = 'high';
+          else devLevel = 'advanced';
+          return { ...theme, questsCompleted: newCount, lastTouched: new Date().toISOString(), developmentLevel: devLevel };
+        });
+        return { ...goal, themes: updatedThemes };
+      });
+    }
+
     // Mise à jour du joueur
     const newPlayerData: Player = {
       ...player,
@@ -409,7 +391,8 @@ const KaizenQuest = () => {
       xpToNext: newXpToNext,
       questsCompleted: player.questsCompleted + 1,
       hardQuestsCompleted: player.hardQuestsCompleted + (quest.difficulty === 'hard' ? 1 : 0),
-      perfectDays: player.perfectDays
+      perfectDays: player.perfectDays,
+      goals: updatedGoals
     };
 
     const currentTitle = getPlayerTitle(newPlayerData.level);

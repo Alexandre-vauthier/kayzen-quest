@@ -185,7 +185,29 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ player, history, 
           {/* Section 2: Activity calendar */}
           <div>
             <h4 className="font-bold mb-3">Activite (12 semaines)</h4>
+            {/* Month labels */}
+            <div className="flex gap-[3px] mb-1 ml-7">
+              {calendarWeeks.map((week, wi) => {
+                const monday = week[0].date;
+                const monthName = monday.toLocaleDateString('fr-FR', { month: 'short' });
+                const showLabel = wi === 0 || monday.getMonth() !== calendarWeeks[wi - 1][0].date.getMonth();
+                return (
+                  <div key={wi} className="flex-1 text-[10px] text-gray-500 truncate">
+                    {showLabel ? monthName : ''}
+                  </div>
+                );
+              })}
+            </div>
             <div className="flex gap-[3px]">
+              {/* Day labels */}
+              <div className="flex flex-col gap-[3px] shrink-0 w-6">
+                {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((label, i) => (
+                  <div key={i} className="aspect-square flex items-center justify-center text-[10px] text-gray-500">
+                    {i % 2 === 0 ? label : ''}
+                  </div>
+                ))}
+              </div>
+              {/* Grid */}
               {calendarWeeks.map((week, wi) => (
                 <div key={wi} className="flex flex-col gap-[3px] flex-1">
                   {week.map((day) => {
@@ -201,7 +223,7 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ player, history, 
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 justify-end">
               <span>Moins</span>
               <div className="w-3 h-3 rounded-sm bg-white/5" />
               <div className="w-3 h-3 rounded-sm bg-purple-500/30" />

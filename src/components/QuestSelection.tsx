@@ -154,17 +154,15 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
       {/* Section quêtes bonus (collapsible) */}
       {bonusQuests.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
             <button
               onClick={() => setShowBonusQuests(!showBonusQuests)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 min-w-0"
             >
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Star className="text-yellow-400" />
-                Quêtes bonus (+50% XP)
-                <span className="text-sm text-gray-400">({bonusQuests.filter(q => q.status !== 'completed').length} restantes)</span>
-              </h2>
-              {showBonusQuests ? <ChevronUp /> : <ChevronDown />}
+              <Star className="text-yellow-400 shrink-0" size={20} />
+              <span className="text-xl font-bold">Quêtes bonus</span>
+              <span className="text-sm text-gray-400 whitespace-nowrap">({bonusQuests.filter(q => q.status !== 'completed').length} restantes)</span>
+              {showBonusQuests ? <ChevronUp className="shrink-0" size={18} /> : <ChevronDown className="shrink-0" size={18} />}
             </button>
             {selectedQuest && refreshButton}
           </div>

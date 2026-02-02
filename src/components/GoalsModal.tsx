@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Loader2, Crown, Sparkles, RefreshCw, Target, AlertTriangle } from 'lucide-react';
+import { X, Loader2, Crown, Sparkles, RefreshCw, Target, AlertTriangle, BarChart3, MessageCircle } from 'lucide-react';
 import type { Goal } from '../types/types';
 
 interface GoalsModalProps {
@@ -151,6 +151,14 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
                 <li className="flex items-center gap-2 text-gray-200">
                   <RefreshCw size={14} className="text-purple-400 shrink-0" />
                   Changer ses quêtes (2x/jour)
+                </li>
+                <li className="flex items-center gap-2 text-gray-200">
+                  <BarChart3 size={14} className="text-purple-400 shrink-0" />
+                  Dashboard de progression
+                </li>
+                <li className="flex items-center gap-2 text-gray-200">
+                  <MessageCircle size={14} className="text-purple-400 shrink-0" />
+                  Message personnalisé à chaque quête validée
                 </li>
               </ul>
             </div>
