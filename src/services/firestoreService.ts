@@ -51,6 +51,7 @@ export async function deleteUserData(uid: string): Promise<void> {
     deleteDoc(doc(db, 'users', uid, 'data', 'player')),
     deleteDoc(doc(db, 'users', uid, 'data', 'dailyQuests')),
     deleteDoc(doc(db, 'users', uid, 'data', 'history')),
+    deleteDoc(doc(db, 'pushSubscriptions', uid)),
   ]);
   await deleteDoc(doc(db, 'users', uid));
 }
