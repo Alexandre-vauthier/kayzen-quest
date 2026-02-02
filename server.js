@@ -119,41 +119,6 @@ app.post('/api/anthropic', async (req, res) => {
   }
 });
 
-// Test endpoint : envoie une notification immédiatement (à supprimer après debug)
-app.get('/api/test-push', async (req, res) => {
-  if (!firestore || !VAPID_PUBLIC_KEY) {
-    return res.json({ error: 'Firebase ou VAPID non configuré', hasFirestore: !!firestore, hasVapid: !!VAPID_PUBLIC_KEY });
-  }
-  try {
-    const snapshot = await firestore.collection('pushSubscriptions').where('enabled', '==', true).get();
-    if (snapshot.empty) {
-      return res.json({ error: 'Aucune subscription active trouvée', count: 0 });
-    }
-    const results = [];
-    for (const doc of snapshot.docs) {
-      const data = doc.data();
-      if (!data.subscription) {
-        results.push({ uid: doc.id, status: 'skip', reason: 'no subscription' });
-        continue;
-      }
-      const payload = JSON.stringify({
-        title: 'Kaizen Quest - Test',
-        body: 'Si tu vois ce message, les notifications fonctionnent !',
-        url: '/',
-      });
-      try {
-        await webPush.sendNotification(data.subscription, payload);
-        results.push({ uid: doc.id, status: 'sent' });
-      } catch (err) {
-        results.push({ uid: doc.id, status: 'error', code: err.statusCode, message: err.message });
-      }
-    }
-    res.json({ results });
-  } catch (err) {
-    res.json({ error: err.message });
-  }
-});
-
 // SPA fallback - toutes les routes non-API retournent index.html
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
