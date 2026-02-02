@@ -62,9 +62,9 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
     return (
       <div
         key={quest.id}
-        className={`border-2 rounded-xl p-5 transition-all ${difficultyColors[quest.difficulty]} ${
-          isCompleted ? 'opacity-60' : 'hover:scale-[1.02]'
-        } ${isMain ? 'border-purple-500/50' : ''}`}
+        className={`border-2 rounded-xl p-5 transition-all ${
+          isCompleted ? 'bg-purple-500/20 border-purple-500/50' : `${difficultyColors[quest.difficulty]} hover:scale-[1.02]`
+        } ${isMain && !isCompleted ? 'border-purple-500/50' : ''}`}
       >
         <div className="flex items-start gap-3 mb-3">
           <CategoryIcon className={`${categories[quest.category].color} mt-1`} size={24} />
@@ -109,7 +109,7 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
             </button>
           )}
           {isCompleted && (
-            <div className="flex-1 px-4 py-2 rounded-lg bg-green-500/10 text-green-400 flex items-center justify-center gap-2">
+            <div className="flex-1 px-4 py-2 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center gap-2">
               <Check size={18} />
               Complété
             </div>
@@ -117,8 +117,8 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
         </div>
 
         {isCompleted && quest.completionMessage && (
-          <div className="mt-3 px-4 py-3 rounded-lg bg-green-500/5 border border-green-500/20">
-            <p className="text-green-300/80 text-sm italic">{quest.completionMessage}</p>
+          <div className="mt-3 px-4 py-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+            <p className="text-purple-200/80 text-sm italic">{quest.completionMessage}</p>
           </div>
         )}
       </div>

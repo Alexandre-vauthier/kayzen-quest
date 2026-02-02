@@ -30,7 +30,7 @@ const BadgesModal: React.FC<BadgesModalProps> = ({ player, onClose }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 p-6 overflow-y-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-6 overflow-y-auto">
           {allBadges.map(badge => {
             const unlocked = player.badges && player.badges.includes(badge.id);
             return (

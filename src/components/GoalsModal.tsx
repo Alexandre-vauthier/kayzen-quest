@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Loader2, Crown, Sparkles, RefreshCw, Target } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Loader2, Crown, Sparkles, RefreshCw, Target, AlertTriangle } from 'lucide-react';
 import type { Goal } from '../types/types';
 
 interface GoalsModalProps {
@@ -31,10 +31,17 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
   onAddGoal,
   onRemoveGoal
 }) => {
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       onAddGoal();
     }
+  };
+
+  const handleConfirmDelete = (goalId: string) => {
+    onRemoveGoal(goalId);
+    setConfirmDeleteId(null);
   };
 
   return (
@@ -53,10 +60,33 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
                 <div key={goal.id} className="bg-white/10 rounded-lg p-4 border border-white/20">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold">{goal.label}</span>
-                    <button onClick={() => onRemoveGoal(goal.id)}>
+                    <button onClick={() => setConfirmDeleteId(goal.id)}>
                       <X size={18} />
                     </button>
                   </div>
+                  {confirmDeleteId === goal.id && (
+                    <div className="mb-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle size={16} className="text-red-400" />
+                        <span className="text-sm text-red-300 font-semibold">Supprimer cet objectif ?</span>
+                      </div>
+                      <p className="text-xs text-gray-400 mb-3">Toute la progression de cet objectif sera perdue.</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleConfirmDelete(goal.id)}
+                          className="flex-1 px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-semibold transition-colors"
+                        >
+                          Supprimer
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="flex-1 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 text-sm font-semibold transition-colors"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {goal.themes && goal.themes.length > 0 && (
                     <div className="mt-3 space-y-1">
                       {goal.themes.map(theme => (
