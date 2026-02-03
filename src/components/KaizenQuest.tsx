@@ -222,7 +222,7 @@ const KaizenQuest = () => {
         </div>
 
         {/* Daily Quests Section */}
-        <div className="bg-white/5 rounded-2xl p-6 border-2 border-blue-500/30 mb-6">
+        <div className="mb-6">
           <div className="mb-6">
             <h2 className="text-2xl font-bold">Quêtes du jour</h2>
             {dailyQuests.quests.length > 0 && dailyQuests.quests.every(q => q.status === 'completed') && (
@@ -302,7 +302,7 @@ const KaizenQuest = () => {
               {/* Custom Quest Input */}
               <div className="mt-6 pt-6 border-t border-white/10">
                 {showCustomQuestInput ? (
-                  <div className="flex gap-2 max-w-md">
+                  <div className="flex gap-2 max-w-xs">
                     <input
                       type="text"
                       value={customQuestInput}
