@@ -36,43 +36,28 @@ export const presetGoals: PresetGoal[] = [
   { id: 'financial', label: 'Mieux gérer mon argent', emoji: '💰' },
 ];
 
-// 5 badges simplifiés - focus sur la vraie progression
 export const allBadges: Badge[] = [
-  {
-    id: 'first-quest',
-    name: 'Premier Pas',
-    emoji: '🔥',
-    description: 'Compléter la 1ère quête',
-    condition: (p) => p.questsCompleted >= 1
-  },
-  {
-    id: 'explorer',
-    name: 'Explorateur',
-    emoji: '🌟',
-    description: 'Atteindre le niveau 5',
-    condition: (p) => p.level >= 5
-  },
-  {
-    id: 'master',
-    name: 'Maître',
-    emoji: '🏆',
-    description: 'Atteindre le niveau 10',
-    condition: (p) => p.level >= 10
-  },
-  {
-    id: 'centurion',
-    name: 'Centurion',
-    emoji: '💯',
-    description: 'Compléter 100 quêtes',
-    condition: (p) => p.questsCompleted >= 100
-  },
-  {
-    id: 'perfectionist',
-    name: 'Perfectionniste',
-    emoji: '⚡',
-    description: 'Compléter 25 quêtes difficiles',
-    condition: (p) => p.hardQuestsCompleted >= 25
-  },
+  // Premiers pas
+  { id: 'first-quest', name: 'Premier Pas', emoji: '🔥', description: 'Compléter ta 1ère quête', condition: (p) => p.questsCompleted >= 1 },
+  { id: 'ten-quests', name: 'Lancé', emoji: '🚀', description: 'Compléter 10 quêtes', condition: (p) => p.questsCompleted >= 10 },
+  { id: 'fifty-quests', name: 'Vétéran', emoji: '🎖️', description: 'Compléter 50 quêtes', condition: (p) => p.questsCompleted >= 50 },
+  { id: 'centurion', name: 'Centurion', emoji: '💯', description: 'Compléter 100 quêtes', condition: (p) => p.questsCompleted >= 100 },
+  // Niveaux
+  { id: 'explorer', name: 'Explorateur', emoji: '🌟', description: 'Atteindre le niveau 5', condition: (p) => p.level >= 5 },
+  { id: 'master', name: 'Maître', emoji: '🏆', description: 'Atteindre le niveau 10', condition: (p) => p.level >= 10 },
+  { id: 'level-20', name: 'Légende Vivante', emoji: '👑', description: 'Atteindre le niveau 20', condition: (p) => p.level >= 20 },
+  // Streaks
+  { id: 'dedicated', name: 'Assidu', emoji: '📅', description: '3 jours de suite', condition: (p) => (p.bestStreak || 0) >= 3 },
+  { id: 'streak-7', name: 'Flamme Éternelle', emoji: '🔥', description: '7 jours de suite', condition: (p) => (p.bestStreak || 0) >= 7 },
+  { id: 'streak-30', name: 'Inarrêtable', emoji: '💫', description: '30 jours de suite', condition: (p) => (p.bestStreak || 0) >= 30 },
+  // Journées parfaites
+  { id: 'first-perfect', name: 'Sans Faute', emoji: '✨', description: '1ère journée parfaite', condition: (p) => p.perfectDays >= 1 },
+  { id: 'five-perfect', name: 'Exemplaire', emoji: '🏅', description: '5 journées parfaites', condition: (p) => p.perfectDays >= 5 },
+  // Difficulté
+  { id: 'hard-5', name: 'Courageux', emoji: '💪', description: '5 quêtes difficiles', condition: (p) => p.hardQuestsCompleted >= 5 },
+  { id: 'perfectionist', name: 'Perfectionniste', emoji: '⚡', description: '25 quêtes difficiles', condition: (p) => p.hardQuestsCompleted >= 25 },
+  // Bonus
+  { id: 'bonus-10', name: 'Surperformant', emoji: '⭐', description: '10 quêtes bonus complétées', condition: (p) => (p.bonusQuestsCompleted || 0) >= 10 },
 ];
 
 export const genericCompletionMessages: string[] = [

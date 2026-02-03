@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Star, ChevronDown, ChevronUp, RefreshCw, Loader2 } from 'lucide-react';
+import { Check, Star, ChevronDown, ChevronUp, RefreshCw, Loader2, Clock, ThumbsUp, ThumbsDown, Pin, Undo2 } from 'lucide-react';
 import { categories, difficultyColors, difficultyXP, BONUS_QUEST_MULTIPLIER } from '../utils/constants';
 import type { Quest } from '../types/types';
 
@@ -12,6 +12,11 @@ interface QuestSelectionProps {
   refreshesUsed?: number;
   refreshing?: boolean;
   onRefreshQuests?: () => void;
+  onFeedback?: (questId: number, feedback: 'up' | 'down') => void;
+  onTogglePin?: (questTitle: string) => void;
+  pinnedQuests?: string[];
+  undoSnapshot?: { questId: number } | null;
+  onUndo?: () => void;
 }
 
 const QuestSelection: React.FC<QuestSelectionProps> = ({
@@ -22,7 +27,12 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
   isPremium = false,
   refreshesUsed = 0,
   refreshing = false,
-  onRefreshQuests
+  onRefreshQuests,
+  onFeedback,
+  onTogglePin,
+  pinnedQuests = [],
+  undoSnapshot,
+  onUndo,
 }) => {
   const [showBonusQuests, setShowBonusQuests] = useState(true);
 
@@ -58,6 +68,7 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
     const isOrWasBonus = quest.status === 'bonus' || (quest.status === 'completed' && quest.wasBonus);
     const xp = isOrWasBonus ? Math.floor(difficultyXP[quest.difficulty] * BONUS_QUEST_MULTIPLIER) : difficultyXP[quest.difficulty];
     const isCompleted = quest.status === 'completed';
+    const isPinned = pinnedQuests.includes(quest.title);
 
     return (
       <div
@@ -66,17 +77,28 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
           isCompleted ? 'bg-purple-500/20 border-purple-500/50' : `${difficultyColors[quest.difficulty]} hover:scale-[1.02]`
         } ${isMain && !isCompleted ? 'border-purple-500/50' : ''}`}
       >
-        <div className="flex items-start gap-3 mb-3">
+        <div className="flex items-start gap-3 mb-2">
           <CategoryIcon className={`${categories[quest.category].color} mt-1`} size={24} />
-          <h3 className={`text-lg font-bold flex-1 ${isCompleted ? 'line-through' : ''}`}>
-            {quest.title}
-          </h3>
+          <div className="flex-1 min-w-0">
+            <h3 className={`text-lg font-bold ${isCompleted ? 'line-through' : ''}`}>
+              {quest.title}
+            </h3>
+            {quest.description && (
+              <p className="text-sm text-gray-400 mt-1">{quest.description}</p>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-2 mb-4 text-sm flex-wrap">
           <span className="px-3 py-1 rounded-full bg-white/10 font-bold">
             +{xp} XP
           </span>
+          {quest.estimatedTime && (
+            <span className="px-3 py-1 rounded-full bg-white/10 text-gray-300 flex items-center gap-1">
+              <Clock size={12} />
+              {quest.estimatedTime}
+            </span>
+          )}
           {isOrWasBonus && (
             <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 font-bold flex items-center gap-1">
               <Star size={14} />
@@ -121,12 +143,64 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
             <p className="text-purple-200/80 text-sm italic">{quest.completionMessage}</p>
           </div>
         )}
+
+        {/* Feedback + Pin on completed quests */}
+        {isCompleted && (
+          <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {onFeedback && (
+                <>
+                  <button
+                    onClick={() => onFeedback(quest.id, 'up')}
+                    className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'up' ? 'bg-green-500/30 text-green-400' : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'}`}
+                    title="Bonne quête"
+                  >
+                    <ThumbsUp size={16} />
+                  </button>
+                  <button
+                    onClick={() => onFeedback(quest.id, 'down')}
+                    className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'down' ? 'bg-red-500/30 text-red-400' : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'}`}
+                    title="Pas pertinente"
+                  >
+                    <ThumbsDown size={16} />
+                  </button>
+                </>
+              )}
+            </div>
+            {onTogglePin && (
+              <button
+                onClick={() => onTogglePin(quest.title)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
+                  isPinned ? 'bg-purple-500/30 text-purple-300' : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'
+                }`}
+                title={isPinned ? 'Retirer des récurrentes' : 'Épingler comme récurrente'}
+              >
+                <Pin size={14} className={isPinned ? 'fill-current' : ''} />
+                {isPinned ? 'Épinglée' : 'Épingler'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
     <div className="space-y-6">
+      {/* Undo toast */}
+      {undoSnapshot && onUndo && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-800 border border-purple-500/50 rounded-xl px-5 py-3 shadow-2xl flex items-center gap-3 animate-slide-up">
+          <span className="text-sm">Quête validée</span>
+          <button
+            onClick={onUndo}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-500/30 hover:bg-purple-500/40 text-purple-300 text-sm font-semibold transition-colors"
+          >
+            <Undo2 size={14} />
+            Annuler
+          </button>
+        </div>
+      )}
+
       {/* Section quête sélectionnée */}
       {selectedQuest ? (
         <div>

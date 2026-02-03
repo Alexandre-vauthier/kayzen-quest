@@ -57,8 +57,30 @@ export function usePlayer() {
     setPlayer(prev => ({ ...prev, goals: (prev.goals || []).filter(g => g.id !== goalId) }));
   }, []);
 
+  const archiveGoal = useCallback((goalId: string) => {
+    setPlayer(prev => ({
+      ...prev,
+      goals: (prev.goals || []).map(g =>
+        g.id === goalId ? { ...g, archivedAt: new Date().toISOString() } : g
+      ),
+    }));
+  }, []);
+
   const togglePremium = useCallback(() => {
     setPlayer(prev => ({ ...prev, premium: !prev.premium }));
+  }, []);
+
+  const togglePinnedQuest = useCallback((questTitle: string) => {
+    setPlayer(prev => {
+      const pinned = prev.pinnedQuests || [];
+      const isAlreadyPinned = pinned.includes(questTitle);
+      return {
+        ...prev,
+        pinnedQuests: isAlreadyPinned
+          ? pinned.filter(q => q !== questTitle)
+          : [...pinned, questTitle],
+      };
+    });
   }, []);
 
   return {
@@ -75,6 +97,8 @@ export function usePlayer() {
     completeOnboarding,
     addGoal,
     removeGoal,
+    archiveGoal,
     togglePremium,
+    togglePinnedQuest,
   };
 }

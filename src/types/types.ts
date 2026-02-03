@@ -16,6 +16,7 @@ export interface Goal {
   label: string;
   themes: Theme[];
   createdAt: string;
+  archivedAt?: string;
 }
 
 export interface StoryChapter {
@@ -38,11 +39,17 @@ export interface Player {
   storyChapters: StoryChapter[];
   onboardingComplete: boolean;
   premium?: boolean;
+  currentStreak?: number;
+  bestStreak?: number;
+  bonusQuestsCompleted?: number;
+  pinnedQuests?: string[];
 }
 
 export interface Quest {
   id: number;
   title: string;
+  description?: string;
+  estimatedTime?: string;
   category: CategoryType;
   difficulty: DifficultyLevel;
   status: QuestStatus;
@@ -52,6 +59,7 @@ export interface Quest {
   completedAt?: string;
   wasBonus?: boolean;
   completionMessage?: string;
+  feedback?: 'up' | 'down';
 }
 
 export interface DailyQuests {
@@ -69,6 +77,7 @@ export interface QuestHistory {
   wasPerfectDay: boolean;
   category?: CategoryType;
   difficulty?: DifficultyLevel;
+  feedback?: 'up' | 'down';
 }
 
 export interface Badge {

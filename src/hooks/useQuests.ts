@@ -11,6 +11,13 @@ export interface QuestCallbacks {
   setGeneratingStory: (val: boolean) => void;
 }
 
+interface UndoSnapshot {
+  player: Player;
+  dailyQuests: DailyQuests;
+  questHistory: QuestHistory[];
+  questId: number;
+}
+
 export function useQuests(player: Player, isPremium: boolean, questCount: number, callbacks: QuestCallbacks) {
   const [dailyQuests, setDailyQuests] = useState<DailyQuests>({
     quests: [],
@@ -20,6 +27,7 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
   const [questHistory, setQuestHistory] = useState<QuestHistory[]>([]);
   const [generating, setGenerating] = useState(false);
   const [timeToReset, setTimeToReset] = useState('');
+  const [undoSnapshot, setUndoSnapshot] = useState<UndoSnapshot | null>(null);
 
   // Refs to avoid stale closures in async callbacks
   const playerRef = useRef(player);
@@ -28,6 +36,7 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
   questHistoryRef.current = questHistory;
   const callbacksRef = useRef(callbacks);
   callbacksRef.current = callbacks;
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Daily reset check
   useEffect(() => {
@@ -66,7 +75,7 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
 
   // Helper: build goals info string for API
   const buildGoalsInfo = useCallback((goals: Player['goals']) => {
-    return (goals || []).map(goal => {
+    return (goals || []).filter(g => !g.archivedAt).map(goal => {
       const themesInfo = goal.themes.map(t => {
         let suggestedDifficulty = 'easy';
         if (t.developmentLevel === 'medium') suggestedDifficulty = 'medium';
@@ -88,15 +97,52 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     });
   }, []);
 
+  // Helper: compute streak from history
+  const computeStreak = useCallback((history: QuestHistory[]) => {
+    if (history.length === 0) return 0;
+
+    const daysWithQuests = new Set<string>();
+    history.forEach(q => {
+      daysWithQuests.add(new Date(q.date).toDateString());
+    });
+
+    const sortedDays = Array.from(daysWithQuests)
+      .map(d => new Date(d))
+      .sort((a, b) => b.getTime() - a.getTime());
+
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < sortedDays.length; i++) {
+      const expected = new Date(today);
+      expected.setDate(expected.getDate() - i);
+      expected.setHours(0, 0, 0, 0);
+
+      const day = new Date(sortedDays[i]);
+      day.setHours(0, 0, 0, 0);
+
+      if (day.getTime() === expected.getTime()) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }, []);
+
   const generateQuests = useCallback(async () => {
     setGenerating(true);
     try {
       const p = playerRef.current;
       const recentQuests = questHistoryRef.current.slice(-15).map(q => q.title).join(', ');
       const goalsInfo = buildGoalsInfo(p.goals);
-      const hasGoals = p.goals && p.goals.length > 0;
+      const hasGoals = p.goals && p.goals.filter(g => !g.archivedAt).length > 0;
 
-      const generatedQuests = await generateQuestsFromAPI(recentQuests, goalsInfo, hasGoals, questCount);
+      const generatedQuests = await generateQuestsFromAPI(
+        recentQuests, goalsInfo, hasGoals, questCount, p.pinnedQuests || []
+      );
       const newQuests: Quest[] = generatedQuests.map((q: any) => ({
         ...q,
         status: 'available' as const,
@@ -137,8 +183,10 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
       ].join(', ');
 
       const goalsInfo = buildGoalsInfo(p.goals);
-      const hasGoals = p.goals && p.goals.length > 0;
-      const generatedQuests = await generateQuestsFromAPI(recentQuests, goalsInfo, hasGoals, countToGenerate);
+      const hasGoals = p.goals && p.goals.filter(g => !g.archivedAt).length > 0;
+      const generatedQuests = await generateQuestsFromAPI(
+        recentQuests, goalsInfo, hasGoals, countToGenerate, p.pinnedQuests || []
+      );
 
       const hasSelectedQuest = keptQuests.some(q => q.status === 'selected');
       const newQuests: Quest[] = generatedQuests.map((q: any) => ({
@@ -175,6 +223,17 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
 
     const p = playerRef.current;
     const cb = callbacksRef.current;
+    const prevHistory = questHistoryRef.current;
+
+    // Save undo snapshot
+    setUndoSnapshot({
+      player: { ...p },
+      dailyQuests: { ...dailyQuests, quests: dailyQuests.quests.map(q => ({ ...q })) },
+      questHistory: [...prevHistory],
+      questId,
+    });
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    undoTimeoutRef.current = setTimeout(() => setUndoSnapshot(null), 6000);
 
     // XP calculation
     const isBonus = quest.status === 'bonus';
@@ -213,6 +272,19 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
       });
     }
 
+    // Streak computation
+    const newHistory: QuestHistory[] = [...prevHistory, {
+      title: quest.title,
+      date: new Date().toISOString(),
+      goalId: quest.goalId,
+      themeId: quest.themeId,
+      wasPerfectDay: false, // updated below
+      category: quest.category,
+      difficulty: quest.difficulty,
+    }];
+    const newStreak = computeStreak(newHistory);
+    const newBestStreak = Math.max(newStreak, p.bestStreak || 0);
+
     // Build new player data
     const currentTitle = getPlayerTitle(newLevel);
     const previousTitle = getPlayerTitle(p.level);
@@ -226,6 +298,9 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
       perfectDays: p.perfectDays,
       goals: updatedGoals,
       name: currentTitle.name,
+      currentStreak: newStreak,
+      bestStreak: newBestStreak,
+      bonusQuestsCompleted: (p.bonusQuestsCompleted || 0) + (isBonus ? 1 : 0),
     };
 
     // Update quest status
@@ -241,17 +316,12 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
       cb.onPerfectDay();
     }
 
+    // Update history entry with wasPerfectDay
+    newHistory[newHistory.length - 1].wasPerfectDay = wasPerfectDay;
+
     // Dispatch state updates
     setDailyQuests(prev => ({ ...prev, quests: updatedQuests }));
-    setQuestHistory(prev => [...prev, {
-      title: quest.title,
-      date: new Date().toISOString(),
-      goalId: quest.goalId,
-      themeId: quest.themeId,
-      wasPerfectDay,
-      category: quest.category,
-      difficulty: quest.difficulty,
-    }]);
+    setQuestHistory(newHistory);
 
     // Badge check
     checkBadges(newPlayerData, cb.onBadgeEarned);
@@ -316,7 +386,29 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     } else {
       cb.setPlayer(newPlayerData);
     }
-  }, [dailyQuests, isPremium, checkBadges]);
+  }, [dailyQuests, isPremium, checkBadges, computeStreak]);
+
+  const undoLastCompletion = useCallback(() => {
+    if (!undoSnapshot) return;
+    const cb = callbacksRef.current;
+    cb.setPlayer(undoSnapshot.player);
+    setDailyQuests(undoSnapshot.dailyQuests);
+    setQuestHistory(undoSnapshot.questHistory);
+    setUndoSnapshot(null);
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+  }, [undoSnapshot]);
+
+  const setQuestFeedback = useCallback((questId: number, feedback: 'up' | 'down') => {
+    setDailyQuests(prev => ({
+      ...prev,
+      quests: prev.quests.map(q => q.id === questId ? { ...q, feedback } : q),
+    }));
+    setQuestHistory(prev => {
+      const quest = dailyQuests.quests.find(q => q.id === questId);
+      if (!quest) return prev;
+      return prev.map(h => h.title === quest.title && h.date === quest.completedAt ? { ...h, feedback } : h);
+    });
+  }, [dailyQuests]);
 
   return {
     dailyQuests,
@@ -329,5 +421,8 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     refreshQuests,
     selectQuest,
     completeQuest,
+    undoSnapshot,
+    undoLastCompletion,
+    setQuestFeedback,
   };
 }

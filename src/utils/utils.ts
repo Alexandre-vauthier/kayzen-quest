@@ -61,7 +61,8 @@ export async function generateQuestsFromAPI(
   recentQuests: string,
   goalsInfo: string,
   hasGoals: boolean,
-  questCount: number = 3
+  questCount: number = 3,
+  pinnedQuests: string[] = []
 ): Promise<any[]> {
   try {
     const difficultyInstruction = !hasGoals
@@ -70,12 +71,16 @@ export async function generateQuestsFromAPI(
         : '2 faciles, 2 moyens, 1 difficile.'
       : '';
 
+    const pinnedInstruction = pinnedQuests.length > 0
+      ? `\nQuêtes épinglées (INCLURE obligatoirement) :\n${pinnedQuests.map(q => `- "${q}"`).join('\n')}\nGénère ${questCount - pinnedQuests.length} quêtes supplémentaires.`
+      : '';
+
     const response = await fetch("/api/anthropic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 1500,
+        max_tokens: 2000,
         messages: [{
           role: "user",
           content: `Génère ${questCount} quêtes quotidiennes. JSON uniquement.
@@ -91,11 +96,16 @@ La difficulté doit correspondre au niveau de développement du thème !
 
 Priorité aux thèmes peu développés. Varie les thèmes.
 IMPORTANT: Utilise les goalId et themeId EXACTS fournis entre crochets ci-dessus.` : `Amélioration générale, ${difficultyInstruction}`}
+${pinnedInstruction}
 
 Éviter: ${recentQuests || 'aucune'}
 
+Pour chaque quête, ajoute :
+- "description": 1 phrase courte expliquant le bénéfice concret de cette action
+- "estimatedTime": durée estimée ("5 min", "10 min", "15 min", "20 min", "30 min" ou "30+ min")
+
 Format:
-{"quests": [{"title": "Action", "category": "body|mind|environment|projects|social", "difficulty": "easy|medium|hard"${hasGoals ? ', "goalId": "goalId-exact", "themeId": "themeId-exact"' : ''}}, ...]}
+{"quests": [{"title": "Action", "description": "Bénéfice concret", "estimatedTime": "10 min", "category": "body|mind|environment|projects|social", "difficulty": "easy|medium|hard"${hasGoals ? ', "goalId": "goalId-exact", "themeId": "themeId-exact"' : ''}}, ...]}
 
 ${difficultyInstruction}`
         }]
@@ -113,6 +123,8 @@ ${difficultyInstruction}`
     return parsed.quests.map((q: any, i: number) => ({
       id: Date.now() + i,
       title: q.title,
+      description: q.description || null,
+      estimatedTime: q.estimatedTime || null,
       category: q.category,
       difficulty: q.difficulty,
       completed: false,
@@ -148,6 +160,59 @@ Génère UNE seule phrase courte et motivante sur le bénéfice concret de cette
     return data.content[0].text.trim();
   } catch (err) {
     console.error('Completion message failed:', err);
+    return '';
+  }
+}
+
+export async function generateWeeklyRecap(
+  questHistory: any[],
+  goals: any[],
+  playerLevel: number
+): Promise<string> {
+  try {
+    const thisWeek = questHistory.filter(q => {
+      const d = new Date(q.date);
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return d >= weekAgo;
+    });
+
+    if (thisWeek.length === 0) return 'Pas de quêtes cette semaine. Lance-toi !';
+
+    const categories = thisWeek.reduce((acc: Record<string, number>, q: any) => {
+      if (q.category) acc[q.category] = (acc[q.category] || 0) + 1;
+      return acc;
+    }, {});
+
+    const response = await fetch("/api/anthropic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 300,
+        messages: [{
+          role: "user",
+          content: `Récap hebdomadaire. Ton bienveillant et motivant, 3-4 phrases max.
+
+Niveau: ${playerLevel}
+Quêtes cette semaine: ${thisWeek.length}
+Catégories: ${Object.entries(categories).map(([k, v]) => `${k}: ${v}`).join(', ')}
+Objectifs: ${goals.map(g => g.label).join(', ') || 'Aucun'}
+Journées parfaites cette semaine: ${thisWeek.filter(q => q.wasPerfectDay).length}
+
+Quêtes réalisées:
+${thisWeek.map(q => `- ${q.title}`).join('\n')}
+
+Génère un court récap personnalisé. Mentionne les points forts et un encouragement. Uniquement le texte.`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+    return data.content[0].text.trim();
+  } catch (err) {
+    console.error('Weekly recap failed:', err);
     return '';
   }
 }
