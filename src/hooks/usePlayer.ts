@@ -21,6 +21,7 @@ export function usePlayer() {
   const [player, setPlayer] = useState<Player>(defaultPlayer);
   const [generatingThemes, setGeneratingThemes] = useState(false);
   const [newGoal, setNewGoal] = useState('');
+  const [newGoalContext, setNewGoalContext] = useState('');
   const [selectedPresetGoal, setSelectedPresetGoal] = useState<string | null>(null);
 
   const isPremium = player.premium === true;
@@ -37,21 +38,23 @@ export function usePlayer() {
     setGeneratingThemes(true);
     setPlayer(prev => ({ ...prev, goals: [], onboardingComplete: true }));
 
-    const goal = await generateThemesForGoal(goalLabel);
+    const goal = await generateThemesForGoal(goalLabel, newGoalContext);
     setPlayer(prev => ({ ...prev, goals: [goal] }));
+    setNewGoalContext('');
 
     setGeneratingThemes(false);
-  }, [selectedPresetGoal, newGoal]);
+  }, [selectedPresetGoal, newGoal, newGoalContext]);
 
   const addGoal = useCallback(async () => {
     if (newGoal.trim()) {
       setGeneratingThemes(true);
-      const goal = await generateThemesForGoal(newGoal.trim());
+      const goal = await generateThemesForGoal(newGoal.trim(), newGoalContext);
       setPlayer(prev => ({ ...prev, goals: [...(prev.goals || []), goal] }));
       setNewGoal('');
+      setNewGoalContext('');
       setGeneratingThemes(false);
     }
-  }, [newGoal]);
+  }, [newGoal, newGoalContext]);
 
   const removeGoal = useCallback((goalId: string) => {
     setPlayer(prev => ({ ...prev, goals: (prev.goals || []).filter(g => g.id !== goalId) }));
@@ -115,6 +118,8 @@ export function usePlayer() {
     generatingThemes,
     newGoal,
     setNewGoal,
+    newGoalContext,
+    setNewGoalContext,
     selectedPresetGoal,
     setSelectedPresetGoal,
     completeOnboarding,

@@ -6,18 +6,22 @@ import type { PresetGoal } from '../types/types';
 interface OnboardingModalProps {
   selectedPresetGoal: string | null;
   newGoal: string;
+  newGoalContext: string;
   generatingThemes: boolean;
   onSelectPresetGoal: (goalId: string) => void;
   onNewGoalChange: (value: string) => void;
+  onContextChange: (value: string) => void;
   onComplete: () => void;
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({
   selectedPresetGoal,
   newGoal,
+  newGoalContext,
   generatingThemes,
   onSelectPresetGoal,
   onNewGoalChange,
+  onContextChange,
   onComplete
 }) => {
   const hasSelection = selectedPresetGoal !== null || newGoal.trim().length > 0;
@@ -53,7 +57,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
             ))}
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4">
             <label className="block text-sm text-gray-400 mb-2">Ou définis le tien</label>
             <input
               type="text"
@@ -61,6 +65,17 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
               value={newGoal}
               onChange={(e) => onNewGoalChange(e.target.value)}
               className="w-full bg-white/10 rounded-lg px-4 py-3 border border-white/20 focus:border-purple-500 outline-none text-sm"
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm text-gray-400 mb-2">Contexte (optionnel)</label>
+            <textarea
+              placeholder="Aide l'IA à mieux te comprendre : ton niveau actuel, tes contraintes (temps, équipement...), ce que tu aimes ou évites, ta situation particulière..."
+              value={newGoalContext}
+              onChange={(e) => onContextChange(e.target.value)}
+              rows={3}
+              className="w-full bg-white/10 rounded-lg px-4 py-3 border border-white/20 focus:border-purple-500 outline-none text-sm resize-none"
             />
           </div>
 

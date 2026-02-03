@@ -5,10 +5,12 @@ import type { Goal } from '../types/types';
 interface GoalsModalProps {
   goals: Goal[];
   newGoal: string;
+  newGoalContext: string;
   generatingThemes: boolean;
   isPremium: boolean;
   onClose: () => void;
   onNewGoalChange: (value: string) => void;
+  onContextChange: (value: string) => void;
   onAddGoal: () => void;
   onRemoveGoal: (goalId: string) => void;
   onArchiveGoal?: (goalId: string) => void;
@@ -25,10 +27,12 @@ const developmentLevelLabels: Record<string, string> = {
 const GoalsModal: React.FC<GoalsModalProps> = ({
   goals,
   newGoal,
+  newGoalContext,
   generatingThemes,
   isPremium,
   onClose,
   onNewGoalChange,
+  onContextChange,
   onAddGoal,
   onRemoveGoal,
   onArchiveGoal,
@@ -188,6 +192,13 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
                 onChange={(e) => onNewGoalChange(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="w-full bg-white/10 rounded-lg px-4 py-3 mb-3 border border-white/20 outline-none"
+              />
+              <textarea
+                placeholder="Contexte (optionnel) : ton niveau actuel, tes contraintes (temps, équipement...), ce que tu aimes ou évites..."
+                value={newGoalContext}
+                onChange={(e) => onContextChange(e.target.value)}
+                rows={2}
+                className="w-full bg-white/10 rounded-lg px-4 py-3 mb-3 border border-white/20 outline-none resize-none text-sm"
               />
               <button onClick={onAddGoal} disabled={!newGoal.trim() || generatingThemes} className="w-full px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 disabled:opacity-50 flex items-center justify-center gap-2">
                 {generatingThemes ? (

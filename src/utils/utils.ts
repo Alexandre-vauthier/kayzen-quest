@@ -12,8 +12,12 @@ export function getPlayerTitle(level: number): Title {
   return titles.find(t => level <= t.maxLevel) || titles[titles.length - 1];
 }
 
-export async function generateThemesForGoal(goalLabel: string): Promise<any> {
+export async function generateThemesForGoal(goalLabel: string, context?: string): Promise<any> {
   try {
+    const contextInstruction = context?.trim()
+      ? `\n\nContexte de l'utilisateur:\n"${context.trim()}"\n\nUtilise ce contexte pour personnaliser les thèmes.`
+      : '';
+
     const response = await fetch("/api/anthropic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -22,7 +26,7 @@ export async function generateThemesForGoal(goalLabel: string): Promise<any> {
         max_tokens: 800,
         messages: [{
           role: "user",
-          content: `Analyse: "${goalLabel}"
+          content: `Analyse: "${goalLabel}"${contextInstruction}
 
 Identifie 2-10 thèmes essentiels.
 
@@ -43,6 +47,7 @@ JSON:
     return {
       id: `goal-${Date.now()}`,
       label: goalLabel,
+      context: context?.trim() || undefined,
       themes: parsed.themes.map((t: any) => ({
         ...t,
         questsCompleted: 0,

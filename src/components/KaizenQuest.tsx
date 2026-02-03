@@ -53,7 +53,8 @@ const KaizenQuest = () => {
   const popups = usePopups();
   const {
     player, setPlayer, isPremium, currentTitle, questCount,
-    generatingThemes, newGoal, setNewGoal, selectedPresetGoal, setSelectedPresetGoal,
+    generatingThemes, newGoal, setNewGoal, newGoalContext, setNewGoalContext,
+    selectedPresetGoal, setSelectedPresetGoal,
     completeOnboarding, addGoal, removeGoal, archiveGoal, togglePremium, togglePinnedQuest,
     canUseStreakFreeze, useStreakFreeze,
   } = usePlayer();
@@ -128,6 +129,7 @@ const KaizenQuest = () => {
       <OnboardingModal
         selectedPresetGoal={selectedPresetGoal}
         newGoal={newGoal}
+        newGoalContext={newGoalContext}
         generatingThemes={generatingThemes}
         onSelectPresetGoal={(goalId) => {
           setSelectedPresetGoal(selectedPresetGoal === goalId ? null : goalId);
@@ -137,6 +139,7 @@ const KaizenQuest = () => {
           setNewGoal(value);
           setSelectedPresetGoal(null);
         }}
+        onContextChange={setNewGoalContext}
         onComplete={handleOnboarding}
       />
     );
@@ -440,10 +443,12 @@ const KaizenQuest = () => {
           <GoalsModal
             goals={player.goals}
             newGoal={newGoal}
+            newGoalContext={newGoalContext}
             generatingThemes={generatingThemes}
             isPremium={isPremium}
             onClose={() => modals.close('goals')}
             onNewGoalChange={setNewGoal}
+            onContextChange={setNewGoalContext}
             onAddGoal={addGoal}
             onRemoveGoal={removeGoal}
             onArchiveGoal={archiveGoal}

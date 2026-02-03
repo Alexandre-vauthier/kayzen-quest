@@ -14,6 +14,7 @@ export interface Theme {
 export interface Goal {
   id: string;
   label: string;
+  context?: string;
   themes: Theme[];
   createdAt: string;
   archivedAt?: string;

@@ -83,7 +83,8 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
         if (t.developmentLevel === 'high' || t.developmentLevel === 'advanced') suggestedDifficulty = 'hard';
         return `${t.name} [goalId="${goal.id}", themeId="${t.id}"] (${t.questsCompleted} quêtes, niveau: ${t.developmentLevel}, difficulté suggérée: ${suggestedDifficulty})`;
       }).join('\n  - ');
-      return `Objectif "${goal.label}" [goalId="${goal.id}"]:\n  - ${themesInfo}`;
+      const contextInfo = goal.context ? `\n  Contexte: "${goal.context}"` : '';
+      return `Objectif "${goal.label}" [goalId="${goal.id}"]:${contextInfo}\n  - ${themesInfo}`;
     }).join('\n\n');
   }, []);
 
