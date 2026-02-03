@@ -197,7 +197,7 @@ const GoalsModal: React.FC<GoalsModalProps> = ({
                 placeholder="Contexte (optionnel) : ton niveau actuel, tes contraintes (temps, équipement...), ce que tu aimes ou évites..."
                 value={newGoalContext}
                 onChange={(e) => onContextChange(e.target.value)}
-                rows={2}
+                rows={3}
                 className="w-full bg-white/10 rounded-lg px-4 py-3 mb-3 border border-white/20 outline-none resize-none text-sm"
               />
               <button onClick={onAddGoal} disabled={!newGoal.trim() || generatingThemes} className="w-full px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 disabled:opacity-50 flex items-center justify-center gap-2">

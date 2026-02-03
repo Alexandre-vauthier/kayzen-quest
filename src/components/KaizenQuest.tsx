@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings, BarChart3, Flame, Heart, Brain, Home, Briefcase, Users, ScrollText, Snowflake, Share2 } from 'lucide-react';
+import { useState } from 'react';
+import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings, BarChart3, Flame, ScrollText, Snowflake, Plus, X } from 'lucide-react';
 
 // Hooks
 import { useModals } from '../hooks/useModals';
@@ -24,29 +24,6 @@ import ShareModal from './ShareModal';
 // Utils
 import { generateWeeklyRecap } from '../utils/utils';
 import { getDailyQuote } from '../utils/constants';
-import type { CategoryType } from '../types/types';
-
-const categoryIcons: Record<CategoryType, any> = {
-  body: Heart,
-  mind: Brain,
-  environment: Home,
-  projects: Briefcase,
-  social: Users,
-};
-const categoryLabels: Record<CategoryType, string> = {
-  body: 'Corps',
-  mind: 'Esprit',
-  environment: 'Environnement',
-  projects: 'Projets',
-  social: 'Social',
-};
-const categoryColors: Record<CategoryType, string> = {
-  body: 'bg-red-500',
-  mind: 'bg-purple-500',
-  environment: 'bg-green-500',
-  projects: 'bg-blue-500',
-  social: 'bg-yellow-500',
-};
 
 const KaizenQuest = () => {
   const modals = useModals();
@@ -90,6 +67,14 @@ const KaizenQuest = () => {
   const [customQuestInput, setCustomQuestInput] = useState('');
   const [showCustomQuestInput, setShowCustomQuestInput] = useState(false);
 
+  // Streak freeze modal
+  const [showStreakFreezeModal, setShowStreakFreezeModal] = useState(false);
+
+  const handleConfirmStreakFreeze = () => {
+    useStreakFreeze();
+    setShowStreakFreezeModal(false);
+  };
+
   const handleAddCustomQuest = () => {
     if (customQuestInput.trim()) {
       addCustomQuest(customQuestInput);
@@ -105,18 +90,6 @@ const KaizenQuest = () => {
     setWeeklyRecap(recap);
     setGeneratingRecap(false);
   };
-
-  // Category stats from quest history
-  const categoryStats = useMemo(() => {
-    const stats: Record<CategoryType, number> = { body: 0, mind: 0, environment: 0, projects: 0, social: 0 };
-    questHistory.forEach(q => {
-      if (q.category && stats[q.category] !== undefined) {
-        stats[q.category]++;
-      }
-    });
-    return stats;
-  }, [questHistory]);
-  const maxCategoryStat = Math.max(...Object.values(categoryStats), 1);
 
   // Onboarding handler
   const handleOnboarding = async () => {
@@ -179,7 +152,7 @@ const KaizenQuest = () => {
                 {/* Streak Freeze (Premium) */}
                 {isPremium && canUseStreakFreeze() && (player.currentStreak || 0) > 0 && (
                   <button
-                    onClick={useStreakFreeze}
+                    onClick={() => setShowStreakFreezeModal(true)}
                     className="flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors"
                     title="Utiliser un jour de gel (protège ton streak)"
                   >
@@ -236,7 +209,7 @@ const KaizenQuest = () => {
                 <p className="text-sm text-purple-300 font-semibold">Ma progression</p>
               </button>
             )}
-            {questHistory.length > 0 && (
+            {isPremium && questHistory.length > 0 && (
               <button
                 onClick={handleWeeklyRecap}
                 className="flex-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 rounded-lg p-3 transition-colors flex items-center justify-center gap-2"
@@ -245,39 +218,8 @@ const KaizenQuest = () => {
                 <p className="text-sm text-blue-300 font-semibold">Récap semaine</p>
               </button>
             )}
-            <button
-              onClick={() => modals.open('share')}
-              className="px-4 bg-gradient-to-r from-pink-500/20 to-orange-500/20 hover:from-pink-500/30 hover:to-orange-500/30 rounded-lg p-3 transition-colors flex items-center justify-center gap-2"
-              title="Partager ma progression"
-            >
-              <Share2 className="text-pink-400" size={20} />
-            </button>
           </div>
         </div>
-
-        {/* Category Stats */}
-        {questHistory.length > 0 && (
-          <div className="bg-white/5 rounded-2xl p-5 mb-6 border border-white/10">
-            <h3 className="text-sm font-semibold text-gray-400 mb-3">Répartition par catégorie</h3>
-            <div className="space-y-2">
-              {(Object.keys(categoryStats) as CategoryType[]).map(cat => {
-                const Icon = categoryIcons[cat];
-                const count = categoryStats[cat];
-                const pct = maxCategoryStat > 0 ? (count / maxCategoryStat) * 100 : 0;
-                return (
-                  <div key={cat} className="flex items-center gap-2">
-                    <Icon size={14} className="text-gray-400 shrink-0" />
-                    <span className="text-xs text-gray-400 w-24 shrink-0">{categoryLabels[cat]}</span>
-                    <div className="flex-1 h-2 bg-black/30 rounded-full overflow-hidden">
-                      <div className={`h-full ${categoryColors[cat]} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="text-xs text-gray-500 w-6 text-right">{count}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Daily Quests Section */}
         <div className="bg-white/5 rounded-2xl p-6 border-2 border-blue-500/30 mb-6">
@@ -360,7 +302,7 @@ const KaizenQuest = () => {
               {/* Custom Quest Input */}
               <div className="mt-6 pt-6 border-t border-white/10">
                 {showCustomQuestInput ? (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 max-w-md">
                     <input
                       type="text"
                       value={customQuestInput}
@@ -373,13 +315,14 @@ const KaizenQuest = () => {
                     <button
                       onClick={handleAddCustomQuest}
                       disabled={!customQuestInput.trim()}
-                      className="px-4 py-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 disabled:opacity-50 transition-colors"
+                      className="p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 disabled:opacity-50 transition-colors"
+                      title="Ajouter"
                     >
-                      Ajouter
+                      <Plus size={20} />
                     </button>
                     <button
                       onClick={() => { setShowCustomQuestInput(false); setCustomQuestInput(''); }}
-                      className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-gray-400 transition-colors"
+                      className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white/50 transition-colors"
                     >
                       ✕
                     </button>
@@ -387,9 +330,9 @@ const KaizenQuest = () => {
                 ) : (
                   <button
                     onClick={() => setShowCustomQuestInput(true)}
-                    className="text-sm text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-2"
+                    className="text-sm text-white/60 hover:text-white transition-colors flex items-center gap-2"
                   >
-                    <span className="text-lg">+</span>
+                    <Plus size={16} />
                     Ajouter une quête personnalisée
                   </button>
                 )}
@@ -438,7 +381,13 @@ const KaizenQuest = () => {
 
         {/* Modals */}
         {modals.isOpen('history') && <HistoryModal storyChapters={player.storyChapters} onClose={() => modals.close('history')} />}
-        {modals.isOpen('badges') && <BadgesModal player={player} onClose={() => modals.close('badges')} />}
+        {modals.isOpen('badges') && (
+          <BadgesModal
+            player={player}
+            onClose={() => modals.close('badges')}
+            onShare={() => { modals.close('badges'); modals.open('share'); }}
+          />
+        )}
         {modals.isOpen('goals') && (
           <GoalsModal
             goals={player.goals}
@@ -481,6 +430,49 @@ const KaizenQuest = () => {
             currentTitle={currentTitle}
             onClose={() => modals.close('share')}
           />
+        )}
+
+        {/* Streak Freeze Confirmation Modal */}
+        {showStreakFreezeModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-800 rounded-2xl max-w-sm w-full border-2 border-cyan-500/50 overflow-hidden">
+              <div className="flex items-center justify-between p-5 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Snowflake className="text-cyan-400" size={24} />
+                  <h3 className="text-xl font-bold">Jour de gel</h3>
+                </div>
+                <button onClick={() => setShowStreakFreezeModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <p className="text-sm text-gray-300">
+                  Le jour de gel te permet de <span className="text-cyan-400 font-semibold">protéger ton streak</span> même si tu ne complètes pas de quête aujourd'hui.
+                </p>
+                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3 text-sm">
+                  <p className="text-cyan-200">🧊 Utilise-le les jours où tu sais que tu ne pourras pas jouer (voyage, maladie, journée chargée...)</p>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Tu peux utiliser 1 jour de gel par semaine (Premium).
+                </p>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowStreakFreezeModal(false)}
+                    className="flex-1 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleConfirmStreakFreeze}
+                    className="flex-1 px-4 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Snowflake size={16} />
+                    Activer le gel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -74,7 +74,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
               placeholder="Aide l'IA à mieux te comprendre : ton niveau actuel, tes contraintes (temps, équipement...), ce que tu aimes ou évites, ta situation particulière..."
               value={newGoalContext}
               onChange={(e) => onContextChange(e.target.value)}
-              rows={3}
+              rows={4}
               className="w-full bg-white/10 rounded-lg px-4 py-3 border border-white/20 focus:border-purple-500 outline-none text-sm resize-none"
             />
           </div>

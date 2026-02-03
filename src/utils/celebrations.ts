@@ -1,11 +1,11 @@
 import confetti from 'canvas-confetti';
 
-// Vibration patterns (in milliseconds)
+// Vibration patterns (in milliseconds) - stronger for better feedback
 const VIBRATION_PATTERNS = {
-  questComplete: [50],
-  badge: [100, 50, 100],
-  levelUp: [100, 50, 100, 50, 200],
-  perfectDay: [100, 50, 100, 50, 100, 50, 300],
+  questComplete: [100, 30, 50],
+  badge: [150, 50, 150],
+  levelUp: [150, 50, 150, 50, 300],
+  perfectDay: [150, 50, 150, 50, 150, 50, 400],
 };
 
 // Safely trigger vibration (not all devices support it)

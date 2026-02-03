@@ -74,7 +74,7 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
               )}
             </h3>
             {quest.description && (
-              <p className="text-sm text-gray-400 mt-1">{quest.description}</p>
+              <p className="text-sm text-white/70 mt-1">{quest.description}</p>
             )}
           </div>
         </div>
@@ -170,8 +170,8 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
         </div>
 
         {isCompleted && quest.completionMessage && (
-          <div className="mt-3 px-4 py-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-            <p className="text-purple-200/80 text-sm italic">{quest.completionMessage}</p>
+          <div className="mt-3 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 animate-fade-in">
+            <p className="text-purple-100 text-sm italic leading-relaxed">✨ {quest.completionMessage}</p>
           </div>
         )}
 
@@ -183,14 +183,14 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
                 <>
                   <button
                     onClick={() => onFeedback(quest.id, 'up')}
-                    className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'up' ? 'bg-green-500/30 text-green-400' : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'}`}
+                    className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'up' ? 'bg-green-500/30 text-green-400' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
                     title="Bonne quête"
                   >
                     <ThumbsUp size={16} />
                   </button>
                   <button
                     onClick={() => onFeedback(quest.id, 'down')}
-                    className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'down' ? 'bg-red-500/30 text-red-400' : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'}`}
+                    className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'down' ? 'bg-red-500/30 text-red-400' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
                     title="Pas pertinente"
                   >
                     <ThumbsDown size={16} />
@@ -202,7 +202,7 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
               <button
                 onClick={() => onTogglePin(quest.title)}
                 className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
-                  isPinned ? 'bg-purple-500/30 text-purple-300' : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'
+                  isPinned ? 'bg-purple-500/30 text-purple-300' : 'text-white/50 hover:text-white hover:bg-white/10'
                 }`}
                 title={isPinned ? 'Retirer des récurrentes' : 'Épingler comme récurrente'}
               >

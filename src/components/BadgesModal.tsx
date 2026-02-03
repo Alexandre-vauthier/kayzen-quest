@@ -1,14 +1,15 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Share2 } from 'lucide-react';
 import { allBadges } from '../utils/constants';
 import type { Player } from '../types/types';
 
 interface BadgesModalProps {
   player: Player;
   onClose: () => void;
+  onShare?: () => void;
 }
 
-const BadgesModal: React.FC<BadgesModalProps> = ({ player, onClose }) => {
+const BadgesModal: React.FC<BadgesModalProps> = ({ player, onClose, onShare }) => {
   const unlockedCount = allBadges.filter(b => player.badges?.includes(b.id)).length;
 
   return (
@@ -19,9 +20,20 @@ const BadgesModal: React.FC<BadgesModalProps> = ({ player, onClose }) => {
             <h3 className="text-3xl font-bold">Succès</h3>
             <p className="text-sm text-gray-400 mt-1">{unlockedCount} / {allBadges.length} débloqués</p>
           </div>
-          <button onClick={onClose}>
-            <X size={24} />
-          </button>
+          <div className="flex items-center gap-2">
+            {onShare && (
+              <button
+                onClick={onShare}
+                className="p-2 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 text-pink-400 transition-colors"
+                title="Partager ma progression"
+              >
+                <Share2 size={20} />
+              </button>
+            )}
+            <button onClick={onClose}>
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 p-6 border-b border-white/10">

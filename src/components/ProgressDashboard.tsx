@@ -1,6 +1,28 @@
-import React from 'react';
-import { X, Flame, CheckCircle, Zap, Trophy } from 'lucide-react';
-import type { Player, QuestHistory } from '../types/types';
+import React, { useMemo } from 'react';
+import { X, Flame, CheckCircle, Zap, Trophy, Heart, Brain, Home, Briefcase, Users } from 'lucide-react';
+import type { Player, QuestHistory, CategoryType } from '../types/types';
+
+const categoryIcons: Record<CategoryType, any> = {
+  body: Heart,
+  mind: Brain,
+  environment: Home,
+  projects: Briefcase,
+  social: Users,
+};
+const categoryLabels: Record<CategoryType, string> = {
+  body: 'Corps',
+  mind: 'Esprit',
+  environment: 'Environnement',
+  projects: 'Projets',
+  social: 'Social',
+};
+const categoryColors: Record<CategoryType, string> = {
+  body: 'bg-red-500',
+  mind: 'bg-purple-500',
+  environment: 'bg-green-500',
+  projects: 'bg-blue-500',
+  social: 'bg-yellow-500',
+};
 
 interface ProgressDashboardProps {
   player: Player;
@@ -100,6 +122,18 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ player, history, 
   const streak = computeStreak(history);
   const activityMap = getActivityMap(history);
   const weekStats = getWeekStats(history);
+
+  // Category stats
+  const categoryStats = useMemo(() => {
+    const stats: Record<CategoryType, number> = { body: 0, mind: 0, environment: 0, projects: 0, social: 0 };
+    history.forEach(q => {
+      if (q.category && stats[q.category] !== undefined) {
+        stats[q.category]++;
+      }
+    });
+    return stats;
+  }, [history]);
+  const maxCategoryStat = Math.max(...Object.values(categoryStats), 1);
 
   // Calendar: last 12 weeks
   const calendarWeeks: { date: Date; dateStr: string; count: number }[][] = [];
@@ -287,6 +321,30 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ player, history, 
               </div>
             </div>
           </div>
+
+          {/* Section 5: Category distribution */}
+          {history.length > 0 && (
+            <div>
+              <h4 className="font-bold mb-3">Répartition par catégorie</h4>
+              <div className="space-y-2">
+                {(Object.keys(categoryStats) as CategoryType[]).map(cat => {
+                  const Icon = categoryIcons[cat];
+                  const count = categoryStats[cat];
+                  const pct = maxCategoryStat > 0 ? (count / maxCategoryStat) * 100 : 0;
+                  return (
+                    <div key={cat} className="flex items-center gap-2">
+                      <Icon size={14} className="text-gray-400 shrink-0" />
+                      <span className="text-xs text-gray-400 w-24 shrink-0">{categoryLabels[cat]}</span>
+                      <div className="flex-1 h-2 bg-black/30 rounded-full overflow-hidden">
+                        <div className={`h-full ${categoryColors[cat]} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-xs text-gray-500 w-6 text-right">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
