@@ -60,6 +60,7 @@ export interface Quest {
   wasBonus?: boolean;
   completionMessage?: string;
   feedback?: 'up' | 'down';
+  isPinned?: boolean;
 }
 
 export interface DailyQuests {

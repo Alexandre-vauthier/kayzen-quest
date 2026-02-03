@@ -68,7 +68,7 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
     const isOrWasBonus = quest.status === 'bonus' || (quest.status === 'completed' && quest.wasBonus);
     const xp = isOrWasBonus ? Math.floor(difficultyXP[quest.difficulty] * BONUS_QUEST_MULTIPLIER) : difficultyXP[quest.difficulty];
     const isCompleted = quest.status === 'completed';
-    const isPinned = pinnedQuests.includes(quest.title);
+    const isPinned = pinnedQuests.includes(quest.title) || quest.isPinned;
 
     return (
       <div
@@ -80,8 +80,13 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
         <div className="flex items-start gap-3 mb-2">
           <CategoryIcon className={`${categories[quest.category].color} mt-1`} size={24} />
           <div className="flex-1 min-w-0">
-            <h3 className={`text-lg font-bold ${isCompleted ? 'line-through' : ''}`}>
+            <h3 className={`text-lg font-bold ${isCompleted ? 'line-through' : ''} flex items-center gap-2`}>
               {quest.title}
+              {isPinned && !isCompleted && (
+                <span title="Quête récurrente">
+                  <Pin size={14} className="text-purple-400 fill-current shrink-0" />
+                </span>
+              )}
             </h3>
             {quest.description && (
               <p className="text-sm text-gray-400 mt-1">{quest.description}</p>

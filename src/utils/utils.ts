@@ -71,8 +71,14 @@ export async function generateQuestsFromAPI(
         : '2 faciles, 2 moyens, 1 difficile.'
       : '';
 
+    // Total = pinned quests + new quests (pinned are IN ADDITION to quota)
+    const totalQuests = pinnedQuests.length + questCount;
     const pinnedInstruction = pinnedQuests.length > 0
-      ? `\nQuêtes épinglées (INCLURE obligatoirement) :\n${pinnedQuests.map(q => `- "${q}"`).join('\n')}\nGénère ${questCount - pinnedQuests.length} quêtes supplémentaires.`
+      ? `\nQUÊTES ÉPINGLÉES (habitudes récurrentes à TOUJOURS inclure) :
+${pinnedQuests.map(q => `- "${q}" [PINNED]`).join('\n')}
+
+Génère EN PLUS ${questCount} nouvelles quêtes variées.
+Marque les quêtes épinglées avec "isPinned": true dans le JSON.`
       : '';
 
     const response = await fetch("/api/anthropic", {
@@ -83,7 +89,7 @@ export async function generateQuestsFromAPI(
         max_tokens: 2000,
         messages: [{
           role: "user",
-          content: `Génère ${questCount} quêtes quotidiennes. JSON uniquement.
+          content: `Génère ${totalQuests} quêtes quotidiennes. JSON uniquement.
 
 ${hasGoals ? `${goalsInfo}
 
@@ -98,14 +104,15 @@ Priorité aux thèmes peu développés. Varie les thèmes.
 IMPORTANT: Utilise les goalId et themeId EXACTS fournis entre crochets ci-dessus.` : `Amélioration générale, ${difficultyInstruction}`}
 ${pinnedInstruction}
 
-Éviter: ${recentQuests || 'aucune'}
+Éviter (pour les nouvelles quêtes): ${recentQuests || 'aucune'}
 
 Pour chaque quête, ajoute :
 - "description": 1 phrase courte expliquant le bénéfice concret de cette action
 - "estimatedTime": durée estimée ("5 min", "10 min", "15 min", "20 min", "30 min" ou "30+ min")
+${pinnedQuests.length > 0 ? '- "isPinned": true/false (true uniquement pour les quêtes épinglées listées ci-dessus)' : ''}
 
 Format:
-{"quests": [{"title": "Action", "description": "Bénéfice concret", "estimatedTime": "10 min", "category": "body|mind|environment|projects|social", "difficulty": "easy|medium|hard"${hasGoals ? ', "goalId": "goalId-exact", "themeId": "themeId-exact"' : ''}}, ...]}
+{"quests": [{"title": "Action", "description": "Bénéfice concret", "estimatedTime": "10 min", "category": "body|mind|environment|projects|social", "difficulty": "easy|medium|hard"${pinnedQuests.length > 0 ? ', "isPinned": false' : ''}${hasGoals ? ', "goalId": "goalId-exact", "themeId": "themeId-exact"' : ''}}, ...]}
 
 ${difficultyInstruction}`
         }]
@@ -130,7 +137,8 @@ ${difficultyInstruction}`
       completed: false,
       type: 'daily',
       goalId: q.goalId || null,
-      themeId: q.themeId || null
+      themeId: q.themeId || null,
+      isPinned: q.isPinned || false
     }));
   } catch (err) {
     console.error('Quest generation failed:', err);
