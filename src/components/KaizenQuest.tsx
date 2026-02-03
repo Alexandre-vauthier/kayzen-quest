@@ -223,15 +223,12 @@ const KaizenQuest = () => {
 
         {/* Daily Quests Section */}
         <div className="mb-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">Quêtes du jour</h2>
-            {dailyQuests.quests.length > 0 && dailyQuests.quests.every(q => q.status === 'completed') && (
-              <div className="flex items-center gap-2 text-sm text-gray-400 mt-2">
-                <Clock size={14} />
-                <span>Prochaines quêtes dans {timeToReset}</span>
-              </div>
-            )}
-          </div>
+          {dailyQuests.quests.length > 0 && dailyQuests.quests.every(q => q.status === 'completed') && (
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
+              <Clock size={14} />
+              <span>Prochaines quêtes dans {timeToReset}</span>
+            </div>
+          )}
 
           {dailyQuests.quests.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
@@ -258,8 +255,8 @@ const KaizenQuest = () => {
                 </>
               ) : (
                 <>
-                  <p className="text-lg mb-2">Génère tes {questCount} quêtes quotidiennes</p>
-                  <p className="text-sm mb-6">Choisis-en 1 comme ta quête du jour, les {questCount - 1} autres seront des quêtes bonus (+50% XP)</p>
+                  <p className="text-lg mb-2 text-purple-300">Génère tes {questCount} quêtes quotidiennes</p>
+                  <p className="text-sm mb-6 text-purple-300/70">Choisis-en 1 comme ta quête du jour, les {questCount - 1} autres seront des quêtes bonus (+50% XP)</p>
                   <div className="flex justify-center">
                     <button
                       onClick={generateQuests}
