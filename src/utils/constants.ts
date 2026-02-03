@@ -76,3 +76,44 @@ export const difficultyColors: Record<DifficultyLevel, string> = {
   medium: 'border-yellow-500/30 bg-yellow-500/5',
   hard: 'border-red-500/30 bg-red-500/5'
 };
+
+export const dailyQuotes: { text: string; author: string }[] = [
+  { text: "Le voyage de mille lieues commence par un pas.", author: "Lao Tseu" },
+  { text: "La seule façon de faire du bon travail est d'aimer ce que vous faites.", author: "Steve Jobs" },
+  { text: "Chaque jour est une nouvelle chance de changer ta vie.", author: "Anonyme" },
+  { text: "Le succès n'est pas final, l'échec n'est pas fatal. C'est le courage de continuer qui compte.", author: "Winston Churchill" },
+  { text: "Sois le changement que tu veux voir dans le monde.", author: "Gandhi" },
+  { text: "L'avenir appartient à ceux qui croient à la beauté de leurs rêves.", author: "Eleanor Roosevelt" },
+  { text: "Ce n'est pas parce que les choses sont difficiles que nous n'osons pas, c'est parce que nous n'osons pas qu'elles sont difficiles.", author: "Sénèque" },
+  { text: "La discipline est le pont entre les objectifs et les accomplissements.", author: "Jim Rohn" },
+  { text: "Petit à petit, l'oiseau fait son nid.", author: "Proverbe français" },
+  { text: "La motivation vous fait commencer, l'habitude vous fait continuer.", author: "Jim Ryun" },
+  { text: "Ne remets pas à demain ce que tu peux faire aujourd'hui.", author: "Benjamin Franklin" },
+  { text: "Celui qui déplace une montagne commence par déplacer de petites pierres.", author: "Confucius" },
+  { text: "La perfection n'est pas atteignable, mais si nous visons la perfection, nous pouvons atteindre l'excellence.", author: "Vince Lombardi" },
+  { text: "Le meilleur moment pour planter un arbre était il y a 20 ans. Le deuxième meilleur moment est maintenant.", author: "Proverbe chinois" },
+  { text: "Fais de ta vie un rêve, et d'un rêve, une réalité.", author: "Antoine de Saint-Exupéry" },
+  { text: "La simplicité est la sophistication suprême.", author: "Léonard de Vinci" },
+  { text: "Vis comme si tu devais mourir demain. Apprends comme si tu devais vivre éternellement.", author: "Gandhi" },
+  { text: "Le plus grand voyage commence toujours par un premier pas.", author: "Bouddha" },
+  { text: "Ce qui ne nous tue pas nous rend plus fort.", author: "Nietzsche" },
+  { text: "La vie est 10% ce qui nous arrive et 90% comment nous y réagissons.", author: "Charles R. Swindoll" },
+  { text: "Chaque expert était autrefois un débutant.", author: "Helen Hayes" },
+  { text: "Le secret du changement est de concentrer toute ton énergie non pas à lutter contre le passé, mais à construire l'avenir.", author: "Socrate" },
+  { text: "La seule limite à notre réalisation de demain sera nos doutes d'aujourd'hui.", author: "Franklin D. Roosevelt" },
+  { text: "Un objectif sans plan n'est qu'un souhait.", author: "Antoine de Saint-Exupéry" },
+  { text: "Crois en toi et tout devient possible.", author: "Anonyme" },
+  { text: "L'échec est simplement l'opportunité de recommencer, cette fois plus intelligemment.", author: "Henry Ford" },
+  { text: "Les grandes choses ne sont jamais faites par une seule personne. Elles sont faites par une équipe.", author: "Steve Jobs" },
+  { text: "Le bonheur n'est pas quelque chose de prêt à l'emploi. Il vient de tes propres actions.", author: "Dalai Lama" },
+  { text: "Commence là où tu es. Utilise ce que tu as. Fais ce que tu peux.", author: "Arthur Ashe" },
+  { text: "La persévérance n'est pas une longue course; c'est plusieurs petites courses, l'une après l'autre.", author: "Walter Elliot" },
+  { text: "Ton attitude détermine ton altitude.", author: "Zig Ziglar" },
+];
+
+// Get quote of the day based on date (deterministic)
+export function getDailyQuote(): { text: string; author: string } {
+  const today = new Date();
+  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  return dailyQuotes[dayOfYear % dailyQuotes.length];
+}

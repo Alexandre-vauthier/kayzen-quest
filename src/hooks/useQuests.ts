@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Player, DailyQuests, QuestHistory, Quest, Badge, LevelUpPopupData } from '../types/types';
 import { difficultyXP, BONUS_QUEST_MULTIPLIER, allBadges, genericCompletionMessages } from '../utils/constants';
 import { getPlayerTitle, generateQuestsFromAPI, generateLevelUpStoryFromAPI, generateQuestCompletionMessage } from '../utils/utils';
+import { celebrateQuestComplete } from '../utils/celebrations';
 
 export interface QuestCallbacks {
   setPlayer: React.Dispatch<React.SetStateAction<Player>>;
@@ -97,32 +98,29 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     });
   }, []);
 
-  // Helper: compute streak from history
-  const computeStreak = useCallback((history: QuestHistory[]) => {
-    if (history.length === 0) return 0;
+  // Helper: compute streak from history (accounting for freeze days)
+  const computeStreak = useCallback((history: QuestHistory[], freezeDays: string[] = []) => {
+    if (history.length === 0 && freezeDays.length === 0) return 0;
 
     const daysWithQuests = new Set<string>();
     history.forEach(q => {
       daysWithQuests.add(new Date(q.date).toDateString());
     });
 
-    const sortedDays = Array.from(daysWithQuests)
-      .map(d => new Date(d))
-      .sort((a, b) => b.getTime() - a.getTime());
+    // Add freeze days to valid days
+    const freezeDaysSet = new Set(freezeDays);
 
     let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    for (let i = 0; i < sortedDays.length; i++) {
-      const expected = new Date(today);
-      expected.setDate(expected.getDate() - i);
-      expected.setHours(0, 0, 0, 0);
+    // Count consecutive days from today backwards
+    for (let i = 0; i < 365; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = checkDate.toDateString();
 
-      const day = new Date(sortedDays[i]);
-      day.setHours(0, 0, 0, 0);
-
-      if (day.getTime() === expected.getTime()) {
+      if (daysWithQuests.has(dateStr) || freezeDaysSet.has(dateStr)) {
         streak++;
       } else {
         break;
@@ -235,6 +233,9 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
     undoTimeoutRef.current = setTimeout(() => setUndoSnapshot(null), 6000);
 
+    // Celebrate!
+    celebrateQuestComplete();
+
     // XP calculation
     const isBonus = quest.status === 'bonus';
     const baseXP = difficultyXP[quest.difficulty];
@@ -282,7 +283,7 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
       category: quest.category,
       difficulty: quest.difficulty,
     }];
-    const newStreak = computeStreak(newHistory);
+    const newStreak = computeStreak(newHistory, p.streakFreezeDays || []);
     const newBestStreak = Math.max(newStreak, p.bestStreak || 0);
 
     // Build new player data
@@ -410,6 +411,27 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     });
   }, [dailyQuests]);
 
+  // Add a custom quest (user-defined, one-off)
+  const addCustomQuest = useCallback((title: string, category: Quest['category'] = 'projects') => {
+    if (!title.trim()) return;
+    const hasSelectedQuest = dailyQuests.quests.some(q => q.status === 'selected');
+    const newQuest: Quest = {
+      id: Date.now(),
+      title: title.trim(),
+      description: 'Quête personnalisée',
+      category,
+      difficulty: 'medium',
+      status: hasSelectedQuest ? 'bonus' : 'available',
+      isSelectedQuest: false,
+      goalId: null,
+      themeId: null,
+    };
+    setDailyQuests(prev => ({
+      ...prev,
+      quests: [...prev.quests, newQuest],
+    }));
+  }, [dailyQuests]);
+
   return {
     dailyQuests,
     setDailyQuests,
@@ -424,5 +446,6 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     undoSnapshot,
     undoLastCompletion,
     setQuestFeedback,
+    addCustomQuest,
   };
 }

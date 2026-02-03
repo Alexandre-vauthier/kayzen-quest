@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings, BarChart3, Flame, Heart, Brain, Home, Briefcase, Users, ScrollText } from 'lucide-react';
+import { Sparkles, Trophy, Award, Target, Loader2, Clock, Settings, BarChart3, Flame, Heart, Brain, Home, Briefcase, Users, ScrollText, Snowflake, Share2 } from 'lucide-react';
 
 // Hooks
 import { useModals } from '../hooks/useModals';
@@ -19,9 +19,11 @@ import HistoryModal from './HistoryModal';
 import SettingsModal from './SettingsModal';
 import ProgressDashboard from './ProgressDashboard';
 import WeeklyRecapModal from './WeeklyRecapModal';
+import ShareModal from './ShareModal';
 
 // Utils
 import { generateWeeklyRecap } from '../utils/utils';
+import { getDailyQuote } from '../utils/constants';
 import type { CategoryType } from '../types/types';
 
 const categoryIcons: Record<CategoryType, any> = {
@@ -53,13 +55,14 @@ const KaizenQuest = () => {
     player, setPlayer, isPremium, currentTitle, questCount,
     generatingThemes, newGoal, setNewGoal, selectedPresetGoal, setSelectedPresetGoal,
     completeOnboarding, addGoal, removeGoal, archiveGoal, togglePremium, togglePinnedQuest,
+    canUseStreakFreeze, useStreakFreeze,
   } = usePlayer();
 
   const {
     dailyQuests, setDailyQuests, questHistory, setQuestHistory,
     generating, timeToReset,
     generateQuests, refreshQuests, selectQuest, completeQuest,
-    undoSnapshot, undoLastCompletion, setQuestFeedback,
+    undoSnapshot, undoLastCompletion, setQuestFeedback, addCustomQuest,
   } = useQuests(player, isPremium, questCount, {
     setPlayer,
     onBadgeEarned: popups.showBadge,
@@ -81,6 +84,18 @@ const KaizenQuest = () => {
   // Weekly recap state
   const [weeklyRecap, setWeeklyRecap] = useState<string | null>(null);
   const [generatingRecap, setGeneratingRecap] = useState(false);
+
+  // Custom quest input
+  const [customQuestInput, setCustomQuestInput] = useState('');
+  const [showCustomQuestInput, setShowCustomQuestInput] = useState(false);
+
+  const handleAddCustomQuest = () => {
+    if (customQuestInput.trim()) {
+      addCustomQuest(customQuestInput);
+      setCustomQuestInput('');
+      setShowCustomQuestInput(false);
+    }
+  };
 
   const handleWeeklyRecap = async () => {
     setGeneratingRecap(true);
@@ -131,9 +146,18 @@ const KaizenQuest = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
             ⚔️ Kaizen Quest ⚔️
           </h1>
+          {(() => {
+            const quote = getDailyQuote();
+            return (
+              <div className="max-w-lg mx-auto">
+                <p className="text-sm text-gray-400 italic">"{quote.text}"</p>
+                <p className="text-xs text-gray-500 mt-1">— {quote.author}</p>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Player Card */}
@@ -148,6 +172,17 @@ const KaizenQuest = () => {
                     <Flame className="text-orange-400" size={16} />
                     <span className="text-sm font-bold text-orange-300">{player.currentStreak}j</span>
                   </div>
+                )}
+                {/* Streak Freeze (Premium) */}
+                {isPremium && canUseStreakFreeze() && (player.currentStreak || 0) > 0 && (
+                  <button
+                    onClick={useStreakFreeze}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors"
+                    title="Utiliser un jour de gel (protège ton streak)"
+                  >
+                    <Snowflake className="text-cyan-400" size={14} />
+                    <span className="text-xs font-bold text-cyan-300">Gel</span>
+                  </button>
                 )}
                 <button
                   onClick={() => modals.open('settings')}
@@ -207,6 +242,13 @@ const KaizenQuest = () => {
                 <p className="text-sm text-blue-300 font-semibold">Récap semaine</p>
               </button>
             )}
+            <button
+              onClick={() => modals.open('share')}
+              className="px-4 bg-gradient-to-r from-pink-500/20 to-orange-500/20 hover:from-pink-500/30 hover:to-orange-500/30 rounded-lg p-3 transition-colors flex items-center justify-center gap-2"
+              title="Partager ma progression"
+            >
+              <Share2 className="text-pink-400" size={20} />
+            </button>
           </div>
         </div>
 
@@ -296,21 +338,60 @@ const KaizenQuest = () => {
               )}
             </div>
           ) : (
-            <QuestSelection
-              quests={dailyQuests.quests}
-              selectedQuestId={dailyQuests.selectedQuestId}
-              onSelectQuest={selectQuest}
-              onCompleteQuest={completeQuest}
-              isPremium={isPremium}
-              refreshesUsed={dailyQuests.questRefreshesUsed || 0}
-              refreshing={generating}
-              onRefreshQuests={refreshQuests}
-              onFeedback={setQuestFeedback}
-              onTogglePin={togglePinnedQuest}
-              pinnedQuests={player.pinnedQuests || []}
-              undoSnapshot={undoSnapshot}
-              onUndo={undoLastCompletion}
-            />
+            <>
+              <QuestSelection
+                quests={dailyQuests.quests}
+                selectedQuestId={dailyQuests.selectedQuestId}
+                onSelectQuest={selectQuest}
+                onCompleteQuest={completeQuest}
+                isPremium={isPremium}
+                refreshesUsed={dailyQuests.questRefreshesUsed || 0}
+                refreshing={generating}
+                onRefreshQuests={refreshQuests}
+                onFeedback={setQuestFeedback}
+                onTogglePin={togglePinnedQuest}
+                pinnedQuests={player.pinnedQuests || []}
+                undoSnapshot={undoSnapshot}
+                onUndo={undoLastCompletion}
+              />
+              {/* Custom Quest Input */}
+              <div className="mt-6 pt-6 border-t border-white/10">
+                {showCustomQuestInput ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customQuestInput}
+                      onChange={(e) => setCustomQuestInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddCustomQuest()}
+                      placeholder="Ma quête personnalisée..."
+                      className="flex-1 bg-white/10 rounded-lg px-4 py-2 border border-white/20 outline-none focus:border-purple-500/50"
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleAddCustomQuest}
+                      disabled={!customQuestInput.trim()}
+                      className="px-4 py-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 disabled:opacity-50 transition-colors"
+                    >
+                      Ajouter
+                    </button>
+                    <button
+                      onClick={() => { setShowCustomQuestInput(false); setCustomQuestInput(''); }}
+                      className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-gray-400 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowCustomQuestInput(true)}
+                    className="text-sm text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-lg">+</span>
+                    Ajouter une quête personnalisée
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
 
@@ -335,14 +416,18 @@ const KaizenQuest = () => {
         {popups.badgePopup && <BadgePopup badge={popups.badgePopup} />}
 
         {popups.perfectDayPopup && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/50">
-            <div className="bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 p-1 rounded-3xl animate-pulse">
-              <div className="bg-slate-900 rounded-3xl p-8 text-center">
-                <div className="text-8xl mb-4">🌟</div>
-                <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">
-                  JOURNÉE PARFAITE !
-                </h2>
-                <p className="text-xl text-purple-300">Tu as complété toutes les quêtes aujourd'hui !</p>
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/60">
+            <div className="animate-pop-in">
+              <div className="animate-glow-pulse bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 p-1 rounded-3xl">
+                <div className="bg-slate-900 rounded-3xl p-8 text-center min-w-[300px]">
+                  <div className="text-8xl animate-float mb-4">🌟</div>
+                  <p className="text-sm text-green-400 font-bold tracking-widest mb-2">INCROYABLE !</p>
+                  <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                    JOURNÉE PARFAITE
+                  </h2>
+                  <p className="text-lg text-gray-300 mt-2">Tu as complété toutes les quêtes</p>
+                  <p className="text-gray-400 text-sm mt-1">Continue comme ça !</p>
+                </div>
               </div>
             </div>
           </div>
@@ -383,6 +468,13 @@ const KaizenQuest = () => {
             recap={weeklyRecap}
             generating={generatingRecap}
             onClose={() => { modals.close('weeklyRecap'); setWeeklyRecap(null); }}
+          />
+        )}
+        {modals.isOpen('share') && (
+          <ShareModal
+            player={player}
+            currentTitle={currentTitle}
+            onClose={() => modals.close('share')}
           />
         )}
       </div>

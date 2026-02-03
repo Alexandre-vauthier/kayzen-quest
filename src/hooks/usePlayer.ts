@@ -83,6 +83,29 @@ export function usePlayer() {
     });
   }, []);
 
+  // Check if user can use streak freeze (premium + once per week)
+  const canUseStreakFreeze = useCallback(() => {
+    if (!isPremium) return false;
+    const lastUsed = player.streakFreezeUsedAt;
+    if (!lastUsed) return true;
+    const lastUsedDate = new Date(lastUsed);
+    const now = new Date();
+    const daysSinceLastUse = Math.floor((now.getTime() - lastUsedDate.getTime()) / (1000 * 60 * 60 * 24));
+    return daysSinceLastUse >= 7;
+  }, [isPremium, player.streakFreezeUsedAt]);
+
+  // Use streak freeze for today
+  const useStreakFreeze = useCallback(() => {
+    if (!canUseStreakFreeze()) return false;
+    const today = new Date().toDateString();
+    setPlayer(prev => ({
+      ...prev,
+      streakFreezeUsedAt: new Date().toISOString(),
+      streakFreezeDays: [...(prev.streakFreezeDays || []), today],
+    }));
+    return true;
+  }, [canUseStreakFreeze]);
+
   return {
     player,
     setPlayer,
@@ -100,5 +123,7 @@ export function usePlayer() {
     archiveGoal,
     togglePremium,
     togglePinnedQuest,
+    canUseStreakFreeze,
+    useStreakFreeze,
   };
 }

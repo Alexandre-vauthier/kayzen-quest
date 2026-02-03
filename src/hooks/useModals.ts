@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export type ModalName = 'badges' | 'goals' | 'history' | 'onboarding' | 'settings' | 'dashboard' | 'weeklyRecap';
+export type ModalName = 'badges' | 'goals' | 'history' | 'onboarding' | 'settings' | 'dashboard' | 'weeklyRecap' | 'share';
 
 export function useModals() {
   const [openModals, setOpenModals] = useState<Record<string, boolean>>({});

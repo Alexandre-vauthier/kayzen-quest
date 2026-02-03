@@ -43,6 +43,8 @@ export interface Player {
   bestStreak?: number;
   bonusQuestsCompleted?: number;
   pinnedQuests?: string[];
+  streakFreezeUsedAt?: string;
+  streakFreezeDays?: string[];
 }
 
 export interface Quest {
