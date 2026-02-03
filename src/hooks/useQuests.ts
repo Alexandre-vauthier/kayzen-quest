@@ -27,6 +27,7 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
   });
   const [questHistory, setQuestHistory] = useState<QuestHistory[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [refreshingQuestId, setRefreshingQuestId] = useState<number | null>(null);
   const [timeToReset, setTimeToReset] = useState('');
   const [undoSnapshot, setUndoSnapshot] = useState<UndoSnapshot | null>(null);
 
@@ -160,49 +161,52 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     setGenerating(false);
   }, [questCount, buildGoalsInfo]);
 
-  const refreshQuests = useCallback(async () => {
+  // Refresh a single quest (Premium feature, max 3/day)
+  const refreshSingleQuest = useCallback(async (questId: number) => {
     const refreshesUsed = dailyQuests.questRefreshesUsed || 0;
-    if (refreshesUsed >= 2) return;
+    if (refreshesUsed >= 3) return;
 
-    setGenerating(true);
+    const questToReplace = dailyQuests.quests.find(q => q.id === questId);
+    if (!questToReplace || questToReplace.status === 'completed' || questToReplace.status === 'selected') return;
+
+    setRefreshingQuestId(questId);
     try {
       const p = playerRef.current;
-      const refreshableQuests = dailyQuests.quests.filter(q => q.status === 'available' || q.status === 'bonus');
-      const keptQuests = dailyQuests.quests.filter(q => q.status !== 'available' && q.status !== 'bonus');
-      const countToGenerate = refreshableQuests.length;
+      const otherQuests = dailyQuests.quests.filter(q => q.id !== questId);
 
-      if (countToGenerate === 0) {
-        setGenerating(false);
-        return;
-      }
-
+      // Build list of quests to avoid (recent + current quests)
       const recentQuests = [
         ...questHistoryRef.current.slice(-15).map(q => q.title),
-        ...keptQuests.map(q => q.title),
+        ...otherQuests.map(q => q.title),
+        questToReplace.title, // Also avoid the quest being replaced
       ].join(', ');
 
       const goalsInfo = buildGoalsInfo(p.goals);
       const hasGoals = p.goals && p.goals.filter(g => !g.archivedAt).length > 0;
+
+      // Generate just 1 quest (no pinned quests for single refresh)
       const generatedQuests = await generateQuestsFromAPI(
-        recentQuests, goalsInfo, hasGoals, countToGenerate, p.pinnedQuests || []
+        recentQuests, goalsInfo, hasGoals, 1, []
       );
 
-      const hasSelectedQuest = keptQuests.some(q => q.status === 'selected');
-      const newQuests: Quest[] = generatedQuests.map((q: any) => ({
-        ...q,
-        status: hasSelectedQuest ? 'bonus' as const : 'available' as const,
-        isSelectedQuest: false,
-      }));
+      if (generatedQuests.length > 0) {
+        const newQuest: Quest = {
+          ...generatedQuests[0],
+          id: Date.now(),
+          status: questToReplace.status,
+          isSelectedQuest: false,
+        };
 
-      setDailyQuests(prev => ({
-        ...prev,
-        quests: [...keptQuests, ...newQuests],
-        questRefreshesUsed: refreshesUsed + 1,
-      }));
+        setDailyQuests(prev => ({
+          ...prev,
+          quests: prev.quests.map(q => q.id === questId ? newQuest : q),
+          questRefreshesUsed: refreshesUsed + 1,
+        }));
+      }
     } catch {
       alert('Erreur génération');
     }
-    setGenerating(false);
+    setRefreshingQuestId(null);
   }, [dailyQuests, buildGoalsInfo]);
 
   const selectQuest = useCallback((questId: number) => {
@@ -439,9 +443,10 @@ export function useQuests(player: Player, isPremium: boolean, questCount: number
     questHistory,
     setQuestHistory,
     generating,
+    refreshingQuestId,
     timeToReset,
     generateQuests,
-    refreshQuests,
+    refreshSingleQuest,
     selectQuest,
     completeQuest,
     undoSnapshot,

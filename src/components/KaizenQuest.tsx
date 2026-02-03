@@ -61,8 +61,8 @@ const KaizenQuest = () => {
 
   const {
     dailyQuests, setDailyQuests, questHistory, setQuestHistory,
-    generating, timeToReset,
-    generateQuests, refreshQuests, selectQuest, completeQuest,
+    generating, refreshingQuestId, timeToReset,
+    generateQuests, refreshSingleQuest, selectQuest, completeQuest,
     undoSnapshot, undoLastCompletion, setQuestFeedback, addCustomQuest,
   } = useQuests(player, isPremium, questCount, {
     setPlayer,
@@ -349,8 +349,8 @@ const KaizenQuest = () => {
                 onCompleteQuest={completeQuest}
                 isPremium={isPremium}
                 refreshesUsed={dailyQuests.questRefreshesUsed || 0}
-                refreshing={generating}
-                onRefreshQuests={refreshQuests}
+                refreshingQuestId={refreshingQuestId}
+                onRefreshSingleQuest={refreshSingleQuest}
                 onFeedback={setQuestFeedback}
                 onTogglePin={togglePinnedQuest}
                 pinnedQuests={player.pinnedQuests || []}
