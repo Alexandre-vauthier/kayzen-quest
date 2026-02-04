@@ -2,6 +2,11 @@ import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { Player, DailyQuests, QuestHistory } from '../types/types';
 
+// Helper to remove undefined values (Firestore doesn't support them)
+function removeUndefined<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 // --- Read operations ---
 
 export async function loadPlayer(uid: string): Promise<Player | null> {
@@ -22,15 +27,15 @@ export async function loadHistory(uid: string): Promise<QuestHistory[]> {
 // --- Write operations ---
 
 export async function savePlayer(uid: string, player: Player): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'data', 'player'), player);
+  await setDoc(doc(db, 'users', uid, 'data', 'player'), removeUndefined(player));
 }
 
 export async function saveDailyQuests(uid: string, dailyQuests: DailyQuests): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'data', 'dailyQuests'), dailyQuests);
+  await setDoc(doc(db, 'users', uid, 'data', 'dailyQuests'), removeUndefined(dailyQuests));
 }
 
 export async function saveHistory(uid: string, history: QuestHistory[]): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'data', 'history'), { entries: history });
+  await setDoc(doc(db, 'users', uid, 'data', 'history'), removeUndefined({ entries: history }));
 }
 
 // --- User profile ---
