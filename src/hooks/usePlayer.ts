@@ -36,10 +36,11 @@ export function usePlayer() {
     if (!goalLabel) return;
 
     setGeneratingThemes(true);
-    setPlayer(prev => ({ ...prev, goals: [], onboardingComplete: true }));
 
+    // Generate goals BEFORE marking onboarding as complete
+    // This ensures the save only happens after goals are ready
     const goal = await generateThemesForGoal(goalLabel, newGoalContext);
-    setPlayer(prev => ({ ...prev, goals: [goal] }));
+    setPlayer(prev => ({ ...prev, goals: [goal], onboardingComplete: true }));
     setNewGoalContext('');
 
     setGeneratingThemes(false);
