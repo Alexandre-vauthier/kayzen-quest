@@ -175,43 +175,41 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
           </div>
         )}
 
-        {/* Feedback + Pin on completed quests */}
-        {isCompleted && (
-          <div className="mt-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {onFeedback && (
-                <>
-                  <button
-                    onClick={() => onFeedback(quest.id, 'up')}
-                    className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'up' ? 'bg-green-500/30 text-green-400' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
-                    title="Bonne quête"
-                  >
-                    <ThumbsUp size={16} />
-                  </button>
-                  <button
-                    onClick={() => onFeedback(quest.id, 'down')}
-                    className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'down' ? 'bg-red-500/30 text-red-400' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
-                    title="Pas pertinente"
-                  >
-                    <ThumbsDown size={16} />
-                  </button>
-                </>
-              )}
-            </div>
-            {onTogglePin && (
-              <button
-                onClick={() => onTogglePin(quest.title)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
-                  isPinned ? 'bg-purple-500/30 text-purple-300' : 'text-white/50 hover:text-white hover:bg-white/10'
-                }`}
-                title={isPinned ? 'Retirer des récurrentes' : 'Épingler comme récurrente'}
-              >
-                <Pin size={14} className={isPinned ? 'fill-current' : ''} />
-                {isPinned ? 'Épinglée' : 'Épingler'}
-              </button>
+        {/* Feedback + Pin on all quests (not just completed) */}
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {onFeedback && (
+              <>
+                <button
+                  onClick={() => onFeedback(quest.id, 'up')}
+                  className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'up' ? 'bg-green-500/30 text-green-400' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                  title="Bonne quête"
+                >
+                  <ThumbsUp size={16} />
+                </button>
+                <button
+                  onClick={() => onFeedback(quest.id, 'down')}
+                  className={`p-1.5 rounded-lg transition-colors ${quest.feedback === 'down' ? 'bg-red-500/30 text-red-400' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                  title="Pas pertinente"
+                >
+                  <ThumbsDown size={16} />
+                </button>
+              </>
             )}
           </div>
-        )}
+          {onTogglePin && (
+            <button
+              onClick={() => onTogglePin(quest.title)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
+                isPinned ? 'bg-purple-500/30 text-purple-300' : 'text-white/50 hover:text-white hover:bg-white/10'
+              }`}
+              title={isPinned ? 'Retirer des récurrentes' : 'Épingler comme récurrente'}
+            >
+              <Pin size={14} className={isPinned ? 'fill-current' : ''} />
+              {isPinned ? 'Épinglée' : 'Épingler'}
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -273,7 +271,7 @@ const QuestSelection: React.FC<QuestSelectionProps> = ({
               <span className="text-sm text-gray-400 whitespace-nowrap">({bonusQuests.filter(q => q.status !== 'completed').length} restantes)</span>
               {showBonusQuests ? <ChevronUp className="shrink-0" size={18} /> : <ChevronDown className="shrink-0" size={18} />}
             </button>
-            {canRefreshQuest && selectedQuest && (
+            {canRefreshQuest && selectedQuest && bonusQuests.some(q => q.status !== 'completed') && (
               <span className="text-xs text-gray-500">
                 {refreshesRemaining} changement{refreshesRemaining > 1 ? 's' : ''} restant{refreshesRemaining > 1 ? 's' : ''}
               </span>
