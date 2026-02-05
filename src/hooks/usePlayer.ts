@@ -28,7 +28,7 @@ export function usePlayer() {
   const currentTitle = getPlayerTitle(player.level);
   const questCount = isPremium ? 5 : 3;
 
-  const completeOnboarding = useCallback(async () => {
+  const completeOnboarding = useCallback(async (acceptedTerms: boolean = false) => {
     const goalLabel = selectedPresetGoal
       ? presetGoals.find(g => g.id === selectedPresetGoal)!.label
       : newGoal.trim();
@@ -40,7 +40,12 @@ export function usePlayer() {
     // Generate goals BEFORE marking onboarding as complete
     // This ensures the save only happens after goals are ready
     const goal = await generateThemesForGoal(goalLabel, newGoalContext);
-    setPlayer(prev => ({ ...prev, goals: [goal], onboardingComplete: true }));
+    setPlayer(prev => ({
+      ...prev,
+      goals: [goal],
+      onboardingComplete: true,
+      acceptedTermsAt: acceptedTerms ? new Date().toISOString() : prev.acceptedTermsAt,
+    }));
     setNewGoalContext('');
 
     setGeneratingThemes(false);

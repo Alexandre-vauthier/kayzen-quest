@@ -92,9 +92,9 @@ const KaizenQuest = () => {
   };
 
   // Onboarding handler
-  const handleOnboarding = async () => {
+  const handleOnboarding = async (acceptedTerms: boolean) => {
     modals.close('onboarding');
-    await completeOnboarding();
+    await completeOnboarding(acceptedTerms);
   };
 
   if (modals.isOpen('onboarding')) {

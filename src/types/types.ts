@@ -46,6 +46,7 @@ export interface Player {
   pinnedQuests?: string[];
   streakFreezeUsedAt?: string;
   streakFreezeDays?: string[];
+  acceptedTermsAt?: string;
 }
 
 export interface Quest {
